@@ -242,3 +242,8 @@ ModelManifest.xml
 .fake/
 
 .idea
+
+*/OutputFiles/*
+*/__pychache__
+
+PythonAutomatisation/OutputFiles/
