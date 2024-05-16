@@ -1,210 +1,52 @@
-import csv
 import glob
+import os
+from math import floor
 
 import xlsxwriter
-from xlsxwriter.exceptions import DuplicateWorksheetName
+from openpyxl.reader.excel import load_workbook
 
-UNPACKED_LENGTH_OFFSET = 0
-LOCATION_OFFSET = 4
-LZS_OFFSET = 8
-BFI_INC = 12
-DEFAULT_FILE_COUNT = 853
-DEFAULT_INTERNAL_PATH = "c:\\ff8\\data\\eng\\battle\\"
-BATTLE_FS = "battle.fs"
-BATTLE_FL = "battle.fl"
-BATTLE_FI = "battle.fi"
-UNPACK_LOC = "Battle Files"
+from ennemy import Ennemy
+from gamedata import GameData
 
-USEFUL_DATA_POINTER = {'offset': 0x1C, 'size': 4, 'byteorder': 'little'}
-c0m127pointerOffset = 4
-NAME_DATA = {'offset': 0x00, 'size': 24, 'byteorder': 'big', 'name': 'name', 'pretty_name': 'Name'}
-HP_DATA = {'offset': 0x18, 'size': 4, 'byteorder': 'big', 'name': 'hp', 'pretty_name': 'HP'}
-STR_DATA = {'offset': 0x1C, 'size': 4, 'byteorder': 'big', 'name': 'str', 'pretty_name': 'STR'}
-VIT_DATA = {'offset': 0x20, 'size': 4, 'byteorder': 'big', 'name': 'vit', 'pretty_name': 'VIT'}
-MAG_DATA = {'offset': 0x24, 'size': 4, 'byteorder': 'big', 'name': 'mag', 'pretty_name': 'MAG'}
-SPR_DATA = {'offset': 0x28, 'size': 4, 'byteorder': 'big', 'name': 'spr', 'pretty_name': 'SPR'}
-SPD_DATA = {'offset': 0x2C, 'size': 4, 'byteorder': 'big', 'name': 'spd', 'pretty_name': 'SPD'}
-EVA_DATA = {'offset': 0x30, 'size': 4, 'byteorder': 'big', 'name': 'eva', 'pretty_name': 'EVA'}
-MED_LVL_DATA = {'offset': 0xF4, 'size': 1, 'byteorder': 'big', 'name': 'med_lvl', 'pretty_name': 'Medium level'}
-HIGH_LVL_DATA = {'offset': 0xF5, 'size': 1, 'byteorder': 'big', 'name': 'high_lvl', 'pretty_name': 'High Level'}
-EXTRA_XP_DATA = {'offset': 0x100, 'size': 1, 'byteorder': 'big', 'name': 'extra_xp', 'pretty_name': 'Extra XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
-XP_DATA = {'offset': 0x102, 'size': 1, 'byteorder': 'big', 'name': 'xp', 'pretty_name': 'XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
-LOW_LVL_MAG_DATA = {'offset': 0x104, 'size': 8, 'byteorder': 'big', 'name': 'low_lvl_mag', 'pretty_name': 'Low level Mag draw'}
-MED_LVL_MAG_DATA = {'offset': 0x10C, 'size': 8, 'byteorder': 'big', 'name': 'med_lvl_mag', 'pretty_name': 'Medium level Mag draw'}
-HIGH_LVL_MAG_DATA = {'offset': 0x114, 'size': 8, 'byteorder': 'big', 'name': 'high_lvl_mag', 'pretty_name': 'High level Mag draw'}
-LOW_LVL_MUG_DATA = {'offset': 0x11C, 'size': 8, 'byteorder': 'big', 'name': 'low_lvl_mug', 'pretty_name': 'Low level Mug draw'}
-MED_LVL_MUG_DATA = {'offset': 0x124, 'size': 8, 'byteorder': 'big', 'name': 'med_lvl_mug', 'pretty_name': 'Medium level Mug draw'}
-HIGH_LVL_MUG_DATA = {'offset': 0x12C, 'size': 8, 'byteorder': 'big', 'name': 'high_lvl_mug', 'pretty_name': 'High level Mug draw'}
-LOW_LVL_DROP_DATA = {'offset': 0x134, 'size': 8, 'byteorder': 'big', 'name': 'low_lvl_drop', 'pretty_name': 'Low level drop draw'}
-MED_LVL_DROP_DATA = {'offset': 0x13C, 'size': 8, 'byteorder': 'big', 'name': 'med_lvl_drop', 'pretty_name': 'Medium level drop draw'}
-HIGH_LVL_DROP_DATA = {'offset': 0x144, 'size': 8, 'byteorder': 'big', 'name': 'high_lvl_drop', 'pretty_name': 'High level drop draw'}
-MUG_RATE_DATA = {'offset': 0x14C, 'size': 1, 'byteorder': 'big', 'name': 'mug_rate', 'pretty_name': 'Mug rate %'}
-DROP_RATE_DATA = {'offset': 0x14D, 'size': 1, 'byteorder': 'big', 'name': 'drop_rate', 'pretty_name': 'Drop rate %'}
-AP_DATA = {'offset': 0x14F, 'size': 1, 'byteorder': 'big', 'name': 'ap', 'pretty_name': 'AP'}
-ELEM_DEF_DATA = {'offset': 0x160, 'size': 8, 'byteorder': 'big', 'name': 'elem_def', 'pretty_name': 'Elemental def'}
-STATUS_DEF_DATA = {'offset': 0x168, 'size': 20, 'byteorder': 'big', 'name': 'status_def', 'pretty_name': 'Status def'}
-CARD_DATA = {'offset': 0xF8, 'size': 3, 'byteorder': 'big', 'name': 'card', 'pretty_name': 'Card'}
-DEVOUR_DATA = {'offset': 0xFB, 'size': 3, 'byteorder': 'big', 'name': 'devour', 'pretty_name': 'Devour'}
-ABILITIES_DATA = {'offset': 0x34, 'size': 48, 'byteorder': 'big', 'name': 'abilities', 'pretty_name': 'Abilities'}
-
-LIST_DATA = [HP_DATA, STR_DATA, VIT_DATA, MAG_DATA, SPR_DATA, SPD_DATA, EVA_DATA, MED_LVL_DATA, HIGH_LVL_DATA, EXTRA_XP_DATA, XP_DATA, LOW_LVL_MAG_DATA, MED_LVL_MAG_DATA, HIGH_LVL_MAG_DATA, LOW_LVL_MUG_DATA, MED_LVL_MUG_DATA,
-             HIGH_LVL_MUG_DATA, LOW_LVL_DROP_DATA, MED_LVL_DROP_DATA, HIGH_LVL_DROP_DATA, MUG_RATE_DATA, DROP_RATE_DATA, AP_DATA, ELEM_DEF_DATA, STATUS_DEF_DATA, CARD_DATA, DEVOUR_DATA, ABILITIES_DATA]
-MAGIC_ORDER = ['Fire', 'Ice', 'Thunder', 'Earth', 'Bio', 'Water', 'Wind', 'Holy']
-STATUS_ORDER = ['Death', 'Poison', 'Petrify', 'Blind', 'Mute', 'Bersk', 'Zombie', 'Sleep', 'Haste', 'Slow', 'Stop', 'Regen', 'Reflect', 'Doom', 'Sub-petrify', 'float', 'Drain', 'Confu', 'Expulsion', 'Gravity']
-CARD_OBTAIN_ORDER = ['DROP', 'MOD', 'RARE_MOD']
 FILE_MONSTER = glob.glob("OriginalFiles/*.dat")
 
+COL_STAT = 0
+COL_DEF = 6
+COL_ITEM = 9
+COL_MISC = 17
+ROW_FILE_DATA = 50
+COL_FILE_DATA = 0
+ROW_MAG = 1
+ROW_MUG = 5
+ROW_DROP = 9
+COL_SHIT_LOW_LVL = 1
+COL_SHIT_MED_LVL = 3
+COL_SHIT_HIGH_LVL = 5
 
-class GameData():
-    def __init__(self):
-        self.devour_values = []
-        self.card_values = []
-        self.magic_values = []
-        self.item_values = []
-
-    def load_devour_data(self, file):
-        with (open(file, "r") as f):
-            self.devour_values = f.read().split('\n')
-            for i in range(len(self.devour_values)):
-                self.devour_values[i] = self.devour_values[i].split('<')[1]
-
-    def load_card_data(self, file):
-        with (open(file, "r") as f):
-            self.card_values = f.read().split('\n')
-            for i in range(len(self.card_values)):
-                self.card_values[i] = self.card_values[i].split('<')[1]
-
-    def load_magic_data(self, file):
-        with (open(file, "r") as f):
-            self.magic_values = f.read().split('\n')
-            for i in range(len(self.magic_values)):
-                self.magic_values[i] = self.magic_values[i].split('<')[1]
-
-    def load_item_data(self, file):
-        with (open(file, "r") as f):
-            self.item_values = f.read().split('\n')
-            for i in range(len(self.item_values)):
-                self.item_values[i] = self.item_values[i].split('<')[1]
-
-
-class Ennemy():
-
-    def __init__(self, game_data):
-        self.name = ""
-        self.file_data = []
-        self.file_data_byte_array = bytearray()
-        self.data = []
-        self.pointer_data_start = 0
-        self.game_data = game_data
-
-    def __repr__(self):
-        return "Name: {} \nData:{}".format(self.name, self.data)
-
-    def load_file_data(self, file):
-        with open(file, "rb") as f:
-            while el := f.read(1):
-                self.file_data.append(el)
-                self.file_data_byte_array.extend(el)
-
-        # First we get the "pointer value", which is the pointer at which the file data start.
-        if '123' in file: # Weird case, the 123 file is a garbage anyway but this is to avoid error
-            data_pointer = 4
-        else:
-            data_pointer = USEFUL_DATA_POINTER['offset']
-        self.pointer_data_start = int.from_bytes(self.file_data_byte_array[data_pointer:data_pointer + USEFUL_DATA_POINTER['size']], USEFUL_DATA_POINTER["byteorder"])
-
-    def load_name(self):
-        # The name is a bit more tricky. A specific conversion needs to happen, that depends on the localization. The translation is done in a text file.
-        name_data = self.file_data_byte_array[self.pointer_data_start + NAME_DATA['offset']:  self.pointer_data_start + NAME_DATA['offset'] + NAME_DATA['size']]
-        for el in name_data:
-            if el < 0x20:
-                break
-            else:
-                self.name += Ennemy.translate_hex_to_str(el - 0x20)
-
-    def translate_hex_to_str(hex):
-        with open("Ressources/sysfnt.txt", "r", encoding="utf-8") as localize_file:
-            file = localize_file.read()
-            file = file.replace('\n', '')
-            file = file.split("\",\"")
-            file[0] = file[0][1:]  # Special case for the split
-            file[-1] = file[-1][:-1]  # Special case for the split
-
-        return file[hex]
-
-    def get_stat(self):
-        """This is the main function. Here we have several cases.
-        So first the based stat. As there is 4 stats for each in order to compute the final stat, they are stored in a list of size 4.
-        For card, this is the ID for the different case: DROP, MOD, RARE_MOD
-        There is common value of size 1, just raw value.
-        % case with specific compute
-        Elem and status have specific computation
-        Devour is a set of ID for Low, medium, High
-        Abilities TODO
-        """
-        for el in LIST_DATA:
-            pointer_data_start = self.file_data_byte_array[self.pointer_data_start + el['offset']:  self.pointer_data_start + el['offset'] + el['size']]
-            if el['name'] in ['hp', 'str', 'vit', 'mag', 'spr', 'spd', 'eva', 'card', 'devour', 'abilities']:
-                value = list(pointer_data_start)
-
-            elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
-                value = int.from_bytes(pointer_data_start)
-
-            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
-                list_data = list(pointer_data_start)
-                value = []
-                for i in range(0, el['size'] - 1, 2):
-                    value.append({'ID': list_data[i], 'value': list_data[i + 1]})
-
-            elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
-                value = int.from_bytes(pointer_data_start) * 100 / 256
-
-            elif el['name'] in ['elem_def']:  # Case with elem
-                value = list(pointer_data_start)
-                for i in range(el['size']):
-                    value[i] = 900 - value[i] * 10  # Give percentage
-
-            elif el['name'] in ['status_def']:  # Case with elem
-                value = list(pointer_data_start)
-                for i in range(el['size']):
-                    value[i] = value[i] - 100  # Give percentage, 155 means immune.
-
-            else:
-                value = "ERROR UNEXPECTED VALUE"
-
-            self.data.append({'name': el['name'], 'value': value, 'pretty_name': el['pretty_name']})
-
-
-def export_to_xlsx(ennemy_list):
-
+def export_to_xlsx(ennemy_list, game_data: Ennemy()):
     workbook = xlsxwriter.Workbook("OutputFiles/ifrit.xlsx")
+
     tab_list = []
     for key, ennemy in ennemy_list.items():
-        print(ennemy)
-        # Excel preparation
-
+        # Tab (sheet) creation. Checking name doesn't already exist
         file_name = ennemy.name
         if file_name == '':
-            file_name= "Empty"
+            file_name = "Empty"
         while file_name in tab_list:
             file_name += " dub"
 
         worksheet = workbook.add_worksheet(file_name)
-
         tab_list.append(file_name)
-
-
 
         # Column position of different "menu"
         column_index = {}
-        column_index['stat'] = 0
-        column_index['def'] = 6
-        column_index['item'] = 9
-        column_index['misc'] = 14
+        column_index['stat'] = COL_STAT
+        column_index['def'] = COL_DEF
+        column_index['item'] = COL_ITEM
+        column_index['misc'] = COL_MISC
 
         # Style creation
-        column_title_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b2b2b2'})
-        bold_style = workbook.add_format({'bold': True})
+        column_title_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b2b2b2', 'align': 'center'})
         border_style = workbook.add_format({'border': 1})
         row_title_style = workbook.add_format({'border': 1, 'bold': True})
         magic_style = workbook.add_format({'border': 1, 'bg_color': '#b8cce4'})
@@ -215,103 +57,226 @@ def export_to_xlsx(ennemy_list):
         title_status_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b9b085'})
         title_drop_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#ccc0da'})
         title_mug_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#7aeca0'})
+        percent_style = workbook.add_format({'num_format': '0%', 'border': 1})
 
         # Titles
         worksheet.write_row(0, column_index['stat'] + 1, ["Value 1", "Value 2", "Value 3", "Value 4"], cell_format=column_title_style)
         worksheet.write_row(0, column_index['def'], ["Defense name", "% Resistance"], cell_format=column_title_style)
-        worksheet.write_row(0, column_index['item'] + 1, ["Low Level", "Medium Level", "High Level"], cell_format=column_title_style)
+        worksheet.write_row(0, column_index['item'] + 1, ["Low Level", "Number", "Medium Level", "Number", "High Level", "Number"], cell_format=column_title_style)
         worksheet.write_row(0, column_index['misc'], ["Property name", "Value"], cell_format=column_title_style)
+
+        # File info not link to the monster data
+        worksheet.write(ROW_FILE_DATA, COL_FILE_DATA, "File data", column_title_style)
+        worksheet.write(ROW_FILE_DATA+1, COL_FILE_DATA, "Original file name", row_title_style)
+        worksheet.write(ROW_FILE_DATA+1, COL_FILE_DATA+1, key, border_style)
 
         # Index setting
         row_index = {}
-        index = {}
         row_index['stat'] = 1
         row_index['def'] = 1
         row_index['item'] = 1
         row_index['misc'] = 1
+        index = {}
         index['elem_def'] = 0
         index['status_def'] = 0
-        index['draw'] = 1
-        index['mug'] = 1
-        index['drop'] = 1
 
         # Filling the Excel
         for el in ennemy.data:
-            try: # Due do garbage data, there is a magic ID 233
+            try:  # Necessary for garbage data
+                # Stat menu
                 column_index['stat'] = 0
-                if el['name'] in ['hp', 'str', 'vit', 'mag', 'spr', 'spd', 'eva']:
-                    worksheet.write(row_index['stat'], 0, el['pretty_name'], row_title_style)  # Writing title of row
+
+                if el['name'] in game_data.stat_values:
+                    # Writing title of row
+                    worksheet.write(row_index['stat'], 0, el['pretty_name'], row_title_style)
                     column_index['stat'] += 1
+                    # Writing the 4 values of stats
                     for el2 in el['value']:
                         worksheet.write(row_index['stat'], column_index['stat'], el2, border_style)
                         column_index['stat'] += 1
                     row_index['stat'] += 1
+                # Def menu
                 elif el['name'] in ['elem_def', 'status_def']:
                     for el2 in el['value']:
                         if el['name'] == 'elem_def':
-                            worksheet.write(row_index['def'], column_index['def'], MAGIC_ORDER[index[el['name']]], title_magic_style)
+                            worksheet.write(row_index['def'], column_index['def'], game_data.magic_type_values[index[el['name']]], title_magic_style)
                             worksheet.write(row_index['def'], column_index['def'] + 1, el2, magic_style)
                         elif el['name'] == 'status_def':
-                            worksheet.write(row_index['def'], column_index['def'], STATUS_ORDER[index[el['name']]], title_status_style)
+                            worksheet.write(row_index['def'], column_index['def'], game_data.status_values[index[el['name']]], title_status_style)
                             worksheet.write(row_index['def'], column_index['def'] + 1, el2, status_style)
-
                         index[el['name']] += 1
                         row_index['def'] += 1
-                elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'mug_rate', 'drop_rate', 'ap']:
-                    worksheet.write(row_index['misc'], column_index['misc'], el['pretty_name'], row_title_style)
-                    worksheet.write(row_index['misc'], column_index['misc'] + 1, el['value'], border_style)
-                    row_index['misc'] += 1
+                # Item menu (containing draw too)
                 elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Items
                     if 'mag' in el['name']:
-                        row_index['item'] = 1
+                        row_index['item'] = ROW_MAG
                     elif 'mug' in el['name']:
-                        row_index['item'] = 5
+                        row_index['item'] = ROW_MUG
                     elif 'drop' in el['name']:
-                        row_index['item'] = 9
-                    index['draw'] = 0
-                    index['mug'] = 0
-                    index['drop'] = 0
-
+                        row_index['item'] = ROW_DROP
+                    # Indew as we fill the data first per 'type' (draw, mug, drop) then per column. And there is 3 column.
+                    index['draw'] = 1
+                    index['mug'] = 1
+                    index['drop'] = 1
+                    # Going through value
                     for el2 in el['value']:
                         if 'low' in el['name']:
-                            col_index = column_index['item'] + 1
+                            col_index = column_index['item'] + COL_SHIT_LOW_LVL
                         elif 'med' in el['name']:
-                            col_index = column_index['item'] + 2
+                            col_index = column_index['item'] + COL_SHIT_MED_LVL
                         elif 'high' in el['name']:
-                            col_index = column_index['item'] + 3
+                            col_index = column_index['item'] + COL_SHIT_HIGH_LVL
                         else:  # Should not happen
-                            col_index = column_index['item'] + 4
-                        if el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag']:
+                            print("Problem on column index")
+                            col_index = column_index['item'] + COL_SHIT_HIGH_LVL + 2
+                        if 'mag' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Draw {}".format(index['draw']), title_magic_style)
                             index['draw'] += 1
-                            worksheet.write(row_index['item'], col_index, ennemy.game_data.magic_values[el2['ID']], magic_style)
-                        elif el['name'] in ['low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug']:
+                            worksheet.write(row_index['item'], col_index, game_data.magic_values[el2['ID']], magic_style)
+                            worksheet.write(row_index['item'], col_index + 1, el2['value'], magic_style)
+                        elif 'mug' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Mug {}".format(index['mug']), title_mug_style)
                             index['mug'] += 1
-                            worksheet.write(row_index['item'], col_index, ennemy.game_data.item_values[el2['ID']], mug_style)
-                        elif el['name'] in ['low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:
+                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']], mug_style)
+                            worksheet.write(row_index['item'], col_index + 1, el2['value'], mug_style)
+                        elif 'drop' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Drop {}".format(index['drop']), title_drop_style)
                             index['drop'] += 1
-                            worksheet.write(row_index['item'], col_index, ennemy.game_data.item_values[el2['ID']], drop_style)
+                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']], drop_style)
+                            worksheet.write(row_index['item'], col_index + 1, el2['value'], drop_style)
                         row_index['item'] += 1
+                # Misc menu
+                elif el['name'] in game_data.MISC_ORDER:
+                    worksheet.write(row_index['misc'], column_index['misc'], el['pretty_name'], row_title_style)
+                    if el['name'] == "mug_rate" or el['name'] == "drop_rate":  # Percent style need to divide by 100
+                        worksheet.write(row_index['misc'], column_index['misc'] + 1, floor(el['value']) / 100, percent_style)
+                    else:
+                        worksheet.write(row_index['misc'], column_index['misc'] + 1, floor(el['value']), border_style)
+                    row_index['misc'] += 1
+
             except IndexError:
-                print("Error on file : {} for monster name: {}".format(key, file_name))
-                continue
+                if key == "c0m123.dat": # Due to garbage data, there is a magic ID 233 in c0m123
+                    print("Known error on com123 due to magic ID 233")
+                elif key == "c0m127.dat": # Due to garbage data, there is a magic ID 233 in c0m123
+                    print("Known error on com127 due to magic ID 255")
+                else:
+                    raise IndexError("Unknown error on file {} for monster name {}".format(key, ennemy.name))
         worksheet.autofit()
     workbook.close()
 
-
-if __name__ == "__main__":
+def create_checksum_file(ennemy_list):
+    with open("OutputFiles/checksum_origin_file.txt", "w") as f:
+        for key, ennemy in ennemy_list.items():
+            f.write("File name: {} | Checksum: {}\n".format(ennemy.origin_file_name, ennemy.origin_file_checksum))
+def dat_to_xlsx(file_list):
     monster = {}
+
+    print("Getting game data")
     game_data = GameData()
     game_data.load_card_data("Ressources/card.txt")
     game_data.load_devour_data("Ressources/devour.txt")
     game_data.load_magic_data("Ressources/magic.txt")
     game_data.load_item_data("Ressources/item.txt")
+    game_data.load_status_data("Ressources/status.txt")
+    game_data.load_magic_type_data("Ressources/magic_type.txt")
+    game_data.load_stat_data("Ressources/stat.txt")
 
-    for file in FILE_MONSTER:
-        monster[file] = Ennemy(game_data)
-        monster[file].load_file_data(file)
-        monster[file].load_name()
-        monster[file].get_stat()
-    export_to_xlsx(monster)
+    print("Reading ennemy files")
+    for file in file_list:
+        file_name = os.path.basename(file)
+        monster[file_name] = Ennemy()
+        monster[file_name].load_file_data(file, game_data)
+        monster[file_name].load_name(game_data)
+        monster[file_name].get_stat(game_data)
+
+    print("Creating checksum file")
+    create_checksum_file(monster)
+
+    print("Writing to xlsx file")
+    export_to_xlsx(monster, game_data)
+
+
+
+def import_from_xlsx(file, ennemy, game_data):
+    """
+    As the module to write is different from the reading one, the one writing start at 0 for column and row, when this one, the reading, start at 1
+    """
+    wb = load_workbook(file)
+    for sheet in wb:
+        ennemy[sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value] = Ennemy()
+        current_ennemy = ennemy[sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value]
+        current_ennemy.name = sheet.title
+
+        # Stat reading
+        row_index = 2
+        for stat in game_data.stat_values:
+            list_value = []
+            for col_index in range(2, 6):
+                list_value.append(sheet.cell(row_index, col_index).value)
+            current_ennemy.data.append({'name': stat, 'value': list_value})
+            row_index += 1
+
+        # Def reading
+        list_value = []
+        for i in range(2, len(game_data.magic_type_values)+1):
+            list_value.append(sheet.cell(i,COL_DEF+1+1).value)
+        current_ennemy.data.append({'name': 'elem_def', 'value': list_value})
+
+        list_value = []
+        for i in range(len(game_data.magic_type_values)+1, len(game_data.magic_type_values) + len(game_data.status_values)):
+            list_value.append(sheet.cell(i, COL_DEF+1+1).value)
+        current_ennemy.data.append({'name': 'status_def', 'value': list_value})
+
+        # Item read
+        item = ['mag', 'mug', 'drop']
+        sub_item = ['low_lvl', 'med_lvl', 'high_lvl']
+        row_index = 2
+        col_index = COL_ITEM+1+1
+        list_value = []
+        for el in item:
+            for sub in sub_item:
+                name = sub + el
+                for i in range(4):
+                    str_data = sheet.cell(row_index + i, col_index).value
+                    if el == 'mag':
+                        id_value = [ind for ind, x in enumerate(game_data.magic_values) if x == str_data][0]
+                    elif el == 'mug' or el == 'drop':
+                        id_value = [ind for ind, x in enumerate(game_data.item_values) if x == str_data][0]
+                    value = sheet.cell(row_index + i, col_index + 1).value
+                    list_value.append({'ID': id_value, 'value': value})  # Value 1 is not used (all mag have value 1)
+                current_ennemy.data.append({'name': name, 'value': list_value})
+
+                col_index += 2
+            row_index += 4
+            col_index = COL_ITEM+1+1
+
+        #Misc reading
+        row_index = 2
+        for misc in game_data.MISC_ORDER:
+            row_index += 1
+            current_ennemy.data.append({'name': misc, 'value': sheet.cell(row_index, COL_DEF+1+1).value})
+    print(current_ennemy.data)
+
+
+def write_to_dat():
+
+def xlsx_to_dat(xlsx_file):
+    ennemy = {}
+    game_data = GameData()
+    game_data.load_card_data("Ressources/card.txt")
+    game_data.load_devour_data("Ressources/devour.txt")
+    game_data.load_magic_data("Ressources/magic.txt")
+    game_data.load_item_data("Ressources/item.txt")
+    game_data.load_status_data("Ressources/status.txt")
+    game_data.load_magic_type_data("Ressources/magic_type.txt")
+    game_data.load_stat_data("Ressources/stat.txt")
+
+    import_from_xlsx(xlsx_file, ennemy, game_data)
+    print(ennemy)
+    write_to_dat()
+
+
+if __name__ == "__main__":
+    dat_to_xlsx(FILE_MONSTER)
+    #xlsx_to_dat("OutputFiles/ifrit.xlsx")
+
