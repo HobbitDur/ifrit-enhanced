@@ -1,3 +1,4 @@
+import argparse
 import glob
 import os
 import pathlib
@@ -323,33 +324,39 @@ def xlsx_to_dat(xlsx_file):
 
 if __name__ == "__main__":
 
-    print("-------Unpacking fs file-------")
-    fshandler.unpack(FOLDER_INPUT, FILE_INPUT_BATTLE)
+    parser = argparse.ArgumentParser(prog="Ifrit Enhanced Command line", description="This program allow you to quicly translate your battle.fs in an easy to edit xlsx file, and transform it back to battle.fs file")
+    parser.add_argument("xlsx", help="Define if you want to transform from battle.fs to xlsx or if you want to transform your modified xlsx back to a battle.fs", choices=["fs_to_xlsx", "xlsx_to_fs"])
+    parser.add_argument("-d", "--delete", help="Delete temporary file created (.dat extracted for example). Only applied for xlsx_to_fs command, as the temporary files are needed to build back to battle.fs", action='store_true')
+    args = parser.parse_args()
+    if args.xlsx == "fs_to_xlsx":
+        print("-------Unpacking fs file-------")
+        fshandler.unpack(FOLDER_INPUT, FILE_INPUT_BATTLE)
 
-    # Check if .dat exist
-    file_monster = glob.glob(FILE_MONSTER_INPUT_REGEX)
-    if not file_monster:
-        raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
+        # Check if .dat exist
+        file_monster = glob.glob(FILE_MONSTER_INPUT_REGEX)
+        if not file_monster:
+            raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
 
-    print("-------Transforming dat to XLSX-------")
-    os.makedirs(FOLDER_OUTPUT, exist_ok=True)
-    dat_to_xlsx(file_monster)
+        print("-------Transforming dat to XLSX-------")
+        os.makedirs(FOLDER_OUTPUT, exist_ok=True)
+        dat_to_xlsx(file_monster)
 
-    print("-------Copying files from input to output-------")
-    # Copying files from Input to Output before modifying
-    os.makedirs(FILE_OUTPUT_BATTLE, exist_ok=True)
-    os.makedirs(FILE_MONSTER_OUTPUT_PATH, exist_ok=True)
-    shutil.copytree(FILE_MONSTER_INPUT_PATH, FILE_MONSTER_OUTPUT_PATH, dirs_exist_ok=True)
+    if args.xlsx == "xlsx_to_fs":
+        print("-------Copying files from input to output-------")
+        # Copying files from Input to Output before modifying
+        os.makedirs(FILE_OUTPUT_BATTLE, exist_ok=True)
+        os.makedirs(FILE_MONSTER_OUTPUT_PATH, exist_ok=True)
+        shutil.copytree(FILE_MONSTER_INPUT_PATH, FILE_MONSTER_OUTPUT_PATH, dirs_exist_ok=True)
 
-    print("-------Transforming XLSX to dat-------")
-    xlsx_to_dat(FILE_XLSX)
+        print("-------Transforming XLSX to dat-------")
+        xlsx_to_dat(FILE_XLSX)
 
-    print("-------Packing to fs file-------")
-    fshandler.unpack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
-
-    # Delete files
-    print("-------Deleting files-------")
-    ## Delete opened archive battle.fs (in Original file)
-    shutil.rmtree(FILE_INPUT_BATTLE)
-    ## Delete dat files in OutputFiles (in Output file)
-    shutil.rmtree(os.path.join(FILE_OUTPUT_BATTLE, "fre"))
+        print("-------Packing to fs file-------")
+        fshandler.pack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
+        if args.delete:
+            # Delete files
+            print("-------Deleting files-------")
+            ## Delete opened archive battle.fs (in Original file)
+            shutil.rmtree(FILE_INPUT_BATTLE)
+            ## Delete dat files in OutputFiles (in Output file)
+            shutil.rmtree(os.path.join(FILE_OUTPUT_BATTLE, "fre"))
