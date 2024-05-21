@@ -1,20 +1,32 @@
 import glob
 import os
+import pathlib
+import shutil
+import subprocess
 from math import floor
 import re
 
 import xlsxwriter
 from openpyxl.reader.excel import load_workbook
 
+import fshandler
 from ennemy import Ennemy
 from gamedata import GameData
 
 ########################################################################
 # Const
 ########################################################################
+FOLDER_INPUT = "OriginalFiles"
+FOLDER_OUTPUT = "OutputFiles"
+FILE_INPUT_BATTLE = os.path.join(FOLDER_INPUT, "decompressed_battle")  # Path for battle.fs decompressed
+FILE_OUTPUT_BATTLE = os.path.join(FOLDER_OUTPUT, "battle")
+FILE_BATTLE_SPECIAL_PATH_FORMAT = os.path.join("fre", "battle")
+FILE_MONSTER_INPUT_PATH = os.path.join(FILE_INPUT_BATTLE, FILE_BATTLE_SPECIAL_PATH_FORMAT)  # Final path for .dat file (dependent of deling-CLI.exe)
+FILE_MONSTER_OUTPUT_PATH = os.path.join(FILE_OUTPUT_BATTLE, FILE_BATTLE_SPECIAL_PATH_FORMAT)
+FILE_MONSTER_INPUT_REGEX = os.path.join(FILE_MONSTER_INPUT_PATH, "c0m*.dat")
+FILE_MONSTER_OUTPUT_REGEX = os.path.join(FILE_MONSTER_OUTPUT_PATH, "c0m*.dat")
+FILE_XLSX = os.path.join(FOLDER_OUTPUT, "ifrit.xlsx")
 
-FILE_MONSTER = glob.glob("OriginalFiles/*.dat")
-FILE_XLSX = "OutputFiles/ifrit.xlsx"
 
 COL_STAT = 0
 COL_DEF = 6
@@ -29,14 +41,16 @@ COL_SHIT_LOW_LVL = 1
 COL_SHIT_MED_LVL = 3
 COL_SHIT_HIGH_LVL = 5
 
+
 ########################################################################
 # Useful
 ########################################################################
 
 def create_checksum_file(ennemy_list, file_name):
-    with open("OutputFiles/" + file_name, "w") as f:
+    with open(os.path.join(FOLDER_OUTPUT, file_name), "w") as f:
         for key, ennemy in ennemy_list.items():
             f.write("File name: {} | Checksum: {}\n".format(ennemy.origin_file_name, ennemy.origin_file_checksum))
+
 
 ########################################################################
 # Export from dat to XLSX
@@ -85,8 +99,8 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
 
         # File info not link to the monster data
         worksheet.write(ROW_FILE_DATA, COL_FILE_DATA, "File data", column_title_style)
-        worksheet.write(ROW_FILE_DATA+1, COL_FILE_DATA, "Original file name", row_title_style)
-        worksheet.write(ROW_FILE_DATA+1, COL_FILE_DATA+1, key, border_style)
+        worksheet.write(ROW_FILE_DATA + 1, COL_FILE_DATA, "Original file name", row_title_style)
+        worksheet.write(ROW_FILE_DATA + 1, COL_FILE_DATA + 1, key, border_style)
 
         # Index setting
         row_index = {}
@@ -191,7 +205,6 @@ def dat_to_xlsx(file_list):
     game_data.load_magic_type_data("Ressources/magic_type.txt")
     game_data.load_stat_data("Ressources/stat.txt")
 
-
     print("Reading ennemy files")
     for file in file_list:
         file_name = os.path.basename(file)
@@ -220,7 +233,7 @@ def import_from_xlsx(file, ennemy, game_data):
     """
     wb = load_workbook(file)
     for sheet in wb:
-        ennemy_origin_file = sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value
+        ennemy_origin_file = sheet.cell(ROW_FILE_DATA + 1 + 1, COL_FILE_DATA + 1 + 1).value
         ennemy[ennemy_origin_file] = Ennemy()
         current_ennemy = ennemy[ennemy_origin_file]
         current_ennemy.name = sheet.title
@@ -237,20 +250,20 @@ def import_from_xlsx(file, ennemy, game_data):
 
         # Def reading
         list_value = []
-        for i in range(2, len(game_data.magic_type_values)+1):
-            list_value.append(sheet.cell(i,COL_DEF+1+1).value)
+        for i in range(2, len(game_data.magic_type_values) + 1):
+            list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
         current_ennemy.data.append({'name': 'elem_def', 'value': list_value})
 
         list_value = []
-        for i in range(len(game_data.magic_type_values)+1, len(game_data.magic_type_values) + len(game_data.status_values)):
-            list_value.append(sheet.cell(i, COL_DEF+1+1).value)
+        for i in range(len(game_data.magic_type_values) + 1, len(game_data.magic_type_values) + len(game_data.status_values)):
+            list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
         current_ennemy.data.append({'name': 'status_def', 'value': list_value})
 
         # Item read
         item = ['mag', 'mug', 'drop']
         sub_item = ['low_lvl', 'med_lvl', 'high_lvl']
         row_index = 2
-        col_index = COL_ITEM+1+1
+        col_index = COL_ITEM + 1 + 1
         list_value = []
         for el in item:
             for sub in sub_item:
@@ -268,21 +281,21 @@ def import_from_xlsx(file, ennemy, game_data):
 
                 col_index += 2
             row_index += 4
-            col_index = COL_ITEM+1+1
+            col_index = COL_ITEM + 1 + 1
 
-        #Misc reading
+        # Misc reading
         row_index = 2
         for misc in game_data.MISC_ORDER:
-            value = sheet.cell(row_index, COL_MISC+1+1).value
+            value = sheet.cell(row_index, COL_MISC + 1 + 1).value
             if misc == "mug_rate" or misc == "drop_rate":
                 value = value * 100
             current_ennemy.data.append({'name': misc, 'value': value})
             row_index += 1
 
 
-def write_to_dat(ennemy_list, game_data:GameData, origin_path:str, dest_path:str):
+def write_to_dat(ennemy_list, game_data: GameData, path: str):
     for key, ennemy in ennemy_list.items():
-        ennemy.write_data_to_file(game_data, origin_path, dest_path)
+        ennemy.write_data_to_file(game_data, path)
 
 
 def xlsx_to_dat(xlsx_file):
@@ -302,13 +315,41 @@ def xlsx_to_dat(xlsx_file):
     import_from_xlsx(xlsx_file, ennemy, game_data)
 
     print("Writing data to dat files")
-    write_to_dat(ennemy, game_data, "OriginalFiles/", "OutputFiles/")
+    write_to_dat(ennemy, game_data, FILE_MONSTER_OUTPUT_PATH)
 
     print("Creating checksum file")
     create_checksum_file(ennemy, "checksum_output_file.txt")
 
 
 if __name__ == "__main__":
-    dat_to_xlsx(FILE_MONSTER)
+
+    print("-------Unpacking fs file-------")
+    fshandler.unpack(FOLDER_INPUT, FILE_INPUT_BATTLE)
+
+    # Check if .dat exist
+    file_monster = glob.glob(FILE_MONSTER_INPUT_REGEX)
+    if not file_monster:
+        raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
+
+    print("-------Transforming dat to XLSX-------")
+    os.makedirs(FOLDER_OUTPUT, exist_ok=True)
+    dat_to_xlsx(file_monster)
+
+    print("-------Copying files from input to output-------")
+    # Copying files from Input to Output before modifying
+    os.makedirs(FILE_OUTPUT_BATTLE, exist_ok=True)
+    os.makedirs(FILE_MONSTER_OUTPUT_PATH, exist_ok=True)
+    shutil.copytree(FILE_MONSTER_INPUT_PATH, FILE_MONSTER_OUTPUT_PATH, dirs_exist_ok=True)
+
+    print("-------Transforming XLSX to dat-------")
     xlsx_to_dat(FILE_XLSX)
 
+    print("-------Packing to fs file-------")
+    fshandler.unpack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
+
+    # Delete files
+    print("-------Deleting files-------")
+    ## Delete opened archive battle.fs (in Original file)
+    shutil.rmtree(FILE_INPUT_BATTLE)
+    ## Delete dat files in OutputFiles (in Output file)
+    shutil.rmtree(os.path.join(FILE_OUTPUT_BATTLE, "fre"))
