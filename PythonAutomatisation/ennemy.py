@@ -44,7 +44,7 @@ class Ennemy():
                 self.name += Ennemy.translate_hex_to_str(el - 0x20)
 
     def translate_hex_to_str(hex):
-        with open("Ressources/sysfnt.txt", "r", encoding="utf-8") as localize_file:
+        with open("Resources/sysfnt.txt", "r", encoding="utf-8") as localize_file:
             file = localize_file.read()
             file = file.replace('\n', '')
             file = file.split("\",\"")

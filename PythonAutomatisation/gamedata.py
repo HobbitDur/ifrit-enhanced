@@ -1,3 +1,6 @@
+import os
+
+
 class GameData():
     USEFUL_DATA_POINTER = {'offset': 0x1C, 'size': 4, 'byteorder': 'little'}
     COM127_POINTER_OFFSET = 4
@@ -34,6 +37,8 @@ class GameData():
                  HIGH_LVL_MUG_DATA, LOW_LVL_DROP_DATA, MED_LVL_DROP_DATA, HIGH_LVL_DROP_DATA, MUG_RATE_DATA, DROP_RATE_DATA, AP_DATA, ELEM_DEF_DATA, STATUS_DEF_DATA, CARD_DATA, DEVOUR_DATA, ABILITIES_DATA]
     CARD_OBTAIN_ORDER = ['DROP', 'MOD', 'RARE_MOD']
     MISC_ORDER = ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'mug_rate', 'drop_rate', 'ap']
+    RESOURCE_FOLDER = "Resources"
+
     def __init__(self):
         self.devour_values = []
         self.card_values = []
@@ -42,6 +47,15 @@ class GameData():
         self.status_values = []
         self.magic_type_values = []
         self.stat_values = []
+
+    def load_all(self):
+        self.load_card_data(os.path.join(self.RESOURCE_FOLDER, "card.txt"))
+        self.load_devour_data(os.path.join(self.RESOURCE_FOLDER, "devour.txt"))
+        self.load_magic_data(os.path.join(self.RESOURCE_FOLDER, "magic.txt"))
+        self.load_item_data(os.path.join(self.RESOURCE_FOLDER, "item.txt"))
+        self.load_status_data(os.path.join(self.RESOURCE_FOLDER, "status.txt"))
+        self.load_magic_type_data(os.path.join(self.RESOURCE_FOLDER, "magic_type.txt"))
+        self.load_stat_data(os.path.join(self.RESOURCE_FOLDER, "stat.txt"))
 
     def load_devour_data(self, file):
         with (open(file, "r") as f):
