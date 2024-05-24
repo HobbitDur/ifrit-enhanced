@@ -29,14 +29,17 @@ class Ennemy():
             data_pointer = 4
         else:
             data_pointer = game_data.USEFUL_DATA_POINTER['offset']
-        self.pointer_data_start = int.from_bytes(self.file_raw_data[data_pointer:data_pointer + game_data.USEFUL_DATA_POINTER['size']], game_data.USEFUL_DATA_POINTER["byteorder"])
+        self.pointer_data_start = int.from_bytes(self.file_raw_data[data_pointer:data_pointer + game_data.USEFUL_DATA_POINTER['size']],
+                                                 game_data.USEFUL_DATA_POINTER["byteorder"])
 
         self.origin_file_name = os.path.basename(file)
         self.origin_file_checksum = get_checksum(file, algorithm='SHA256')
 
     def load_name(self, game_data):
         # The name is a bit more tricky. A specific conversion needs to happen, that depends on the localization. The translation is done in a text file.
-        name_data = self.file_raw_data[self.pointer_data_start + game_data.NAME_DATA['offset']:  self.pointer_data_start + game_data.NAME_DATA['offset'] + game_data.NAME_DATA['size']]
+        name_data = self.file_raw_data[
+                    self.pointer_data_start + game_data.NAME_DATA['offset']:  self.pointer_data_start + game_data.NAME_DATA['offset'] + game_data.NAME_DATA[
+                        'size']]
         for el in name_data:
             if el < 0x20:
                 break
@@ -61,17 +64,18 @@ class Ennemy():
         % case with specific compute
         Elem and status have specific computation
         Devour is a set of ID for Low, medium, High
-        Abilities TODO
+        Abilities
         """
         for el in game_data.LIST_DATA:
             raw_data_selected = self.file_raw_data[self.pointer_data_start + el['offset']:  self.pointer_data_start + el['offset'] + el['size']]
-            if el['name'] in (game_data.stat_values + ['card', 'devour', 'abilities']):
+            if el['name'] in (game_data.stat_values + ['card', 'devour']):
                 value = list(raw_data_selected)
 
             elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
                 value = int.from_bytes(raw_data_selected)
 
-            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
+            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop',
+                                'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
                 list_data = list(raw_data_selected)
                 value = []
                 for i in range(0, el['size'] - 1, 2):
@@ -84,12 +88,15 @@ class Ennemy():
                 value = list(raw_data_selected)
                 for i in range(el['size']):
                     value[i] = 900 - value[i] * 10  # Give percentage
-
+            elif el['name'] in ['abilities_low', 'abilities_med', 'abilities_high']:
+                list_data = list(raw_data_selected)
+                value = []
+                for i in range(0, el['size'] - 1, 4):
+                    value.append({'type': list_data[i], 'animation': list_data[i + 1], 'id': int.from_bytes(list_data[i + 2:i + 3], el['byteorder'])})
             elif el['name'] in ['status_def']:  # Case with elem
                 value = list(raw_data_selected)
                 for i in range(el['size']):
                     value[i] = value[i] - 100  # Give percentage, 155 means immune.
-
             else:
                 value = "ERROR UNEXPECTED VALUE"
 
@@ -99,18 +106,18 @@ class Ennemy():
         # First copy original file
         full_dest_path = os.path.join(path, self.origin_file_name)
 
-
         # Then load file (python make it difficult to directly modify files)
         self.load_file_data(full_dest_path, game_data)
 
         # Then modify loaded file
         for el in self.data:
             property_elem = [x for ind, x in enumerate(game_data.LIST_DATA) if x['name'] == el['name']][0]
-            if el['name'] in (game_data.stat_values + ['card', 'devour', 'abilities']):  # List
+            if el['name'] in (game_data.stat_values + ['card', 'devour']):  # List
                 value_to_set = bytes(el['value'])
             elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
                 value_to_set = el['value'].to_bytes()
-            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
+            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop',
+                                'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
                 value_to_set = []
                 for el2 in el['value']:
                     value_to_set.append(el2['ID'])
@@ -128,7 +135,13 @@ class Ennemy():
                 for i in range(len(el['value'])):
                     value_to_set.append(el['value'][i] + 100)
                 value_to_set = bytes(value_to_set)
-
+            elif el['name'] in game_data.ABILITIES_HIGHNESS_ORDER:
+                value_to_set = bytearray()
+                for el2 in el['value']:
+                    value_to_set.extend(game_data.ennemy_abilities_type_values.index(el2['type']).to_bytes())
+                    value_to_set.extend(el2['animation'].to_bytes())
+                    value_to_set.extend(el2['id'].to_bytes(2, property_elem['byteorder']))
+                value_to_set = bytes(value_to_set)
             if value_to_set:
                 self.file_raw_data[self.pointer_data_start + property_elem['offset']:
                                    self.pointer_data_start + property_elem['offset'] + property_elem['size']] = value_to_set

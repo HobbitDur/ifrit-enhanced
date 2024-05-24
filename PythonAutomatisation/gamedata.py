@@ -14,8 +14,10 @@ class GameData():
     EVA_DATA = {'offset': 0x30, 'size': 4, 'byteorder': 'big', 'name': 'eva', 'pretty_name': 'EVA'}
     MED_LVL_DATA = {'offset': 0xF4, 'size': 1, 'byteorder': 'big', 'name': 'med_lvl', 'pretty_name': 'Medium level'}
     HIGH_LVL_DATA = {'offset': 0xF5, 'size': 1, 'byteorder': 'big', 'name': 'high_lvl', 'pretty_name': 'High Level'}
-    EXTRA_XP_DATA = {'offset': 0x100, 'size': 1, 'byteorder': 'big', 'name': 'extra_xp', 'pretty_name': 'Extra XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
-    XP_DATA = {'offset': 0x102, 'size': 1, 'byteorder': 'big', 'name': 'xp', 'pretty_name': 'XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
+    EXTRA_XP_DATA = {'offset': 0x100, 'size': 1, 'byteorder': 'big', 'name': 'extra_xp',
+                     'pretty_name': 'Extra XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
+    XP_DATA = {'offset': 0x102, 'size': 1, 'byteorder': 'big', 'name': 'xp',
+               'pretty_name': 'XP'}  # Seems the size was intended for 2 bytes, but in practice no monster has a value > 255
     LOW_LVL_MAG_DATA = {'offset': 0x104, 'size': 8, 'byteorder': 'big', 'name': 'low_lvl_mag', 'pretty_name': 'Low level Mag draw'}
     MED_LVL_MAG_DATA = {'offset': 0x10C, 'size': 8, 'byteorder': 'big', 'name': 'med_lvl_mag', 'pretty_name': 'Medium level Mag draw'}
     HIGH_LVL_MAG_DATA = {'offset': 0x114, 'size': 8, 'byteorder': 'big', 'name': 'high_lvl_mag', 'pretty_name': 'High level Mag draw'}
@@ -32,11 +34,16 @@ class GameData():
     STATUS_DEF_DATA = {'offset': 0x168, 'size': 20, 'byteorder': 'big', 'name': 'status_def', 'pretty_name': 'Status def'}
     CARD_DATA = {'offset': 0xF8, 'size': 3, 'byteorder': 'big', 'name': 'card', 'pretty_name': 'Card'}
     DEVOUR_DATA = {'offset': 0xFB, 'size': 3, 'byteorder': 'big', 'name': 'devour', 'pretty_name': 'Devour'}
-    ABILITIES_DATA = {'offset': 0x34, 'size': 48, 'byteorder': 'big', 'name': 'abilities', 'pretty_name': 'Abilities'}
-    LIST_DATA = [HP_DATA, STR_DATA, VIT_DATA, MAG_DATA, SPR_DATA, SPD_DATA, EVA_DATA, MED_LVL_DATA, HIGH_LVL_DATA, EXTRA_XP_DATA, XP_DATA, LOW_LVL_MAG_DATA, MED_LVL_MAG_DATA, HIGH_LVL_MAG_DATA, LOW_LVL_MUG_DATA, MED_LVL_MUG_DATA,
-                 HIGH_LVL_MUG_DATA, LOW_LVL_DROP_DATA, MED_LVL_DROP_DATA, HIGH_LVL_DROP_DATA, MUG_RATE_DATA, DROP_RATE_DATA, AP_DATA, ELEM_DEF_DATA, STATUS_DEF_DATA, CARD_DATA, DEVOUR_DATA, ABILITIES_DATA]
+    ABILITIES_LOW_DATA = {'offset': 0x34, 'size': 64, 'byteorder': 'little', 'name': 'abilities_low', 'pretty_name': 'Abilities Low Level'}
+    ABILITIES_MED_DATA = {'offset': 0x74, 'size': 64, 'byteorder': 'little', 'name': 'abilities_med', 'pretty_name': 'Abilities Medium Level'}
+    ABILITIES_HIGH_DATA = {'offset': 0xB4, 'size': 64, 'byteorder': 'little', 'name': 'abilities_high', 'pretty_name': 'Abilities High Level'}
+    LIST_DATA = [HP_DATA, STR_DATA, VIT_DATA, MAG_DATA, SPR_DATA, SPD_DATA, EVA_DATA, MED_LVL_DATA, HIGH_LVL_DATA, EXTRA_XP_DATA, XP_DATA, LOW_LVL_MAG_DATA,
+                 MED_LVL_MAG_DATA, HIGH_LVL_MAG_DATA, LOW_LVL_MUG_DATA, MED_LVL_MUG_DATA,
+                 HIGH_LVL_MUG_DATA, LOW_LVL_DROP_DATA, MED_LVL_DROP_DATA, HIGH_LVL_DROP_DATA, MUG_RATE_DATA, DROP_RATE_DATA, AP_DATA, ELEM_DEF_DATA,
+                 STATUS_DEF_DATA, CARD_DATA, DEVOUR_DATA, ABILITIES_LOW_DATA, ABILITIES_MED_DATA, ABILITIES_HIGH_DATA]
     CARD_OBTAIN_ORDER = ['DROP', 'MOD', 'RARE_MOD']
     MISC_ORDER = ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'mug_rate', 'drop_rate', 'ap']
+    ABILITIES_HIGHNESS_ORDER = ['abilities_low', 'abilities_med', 'abilities_high']
     RESOURCE_FOLDER = "Resources"
 
     def __init__(self):
@@ -47,6 +54,8 @@ class GameData():
         self.status_values = []
         self.magic_type_values = []
         self.stat_values = []
+        self.ennemy_abilities_values = []
+        self.ennemy_abilities_type_values = []
 
     def load_all(self):
         self.load_card_data(os.path.join(self.RESOURCE_FOLDER, "card.txt"))
@@ -56,6 +65,8 @@ class GameData():
         self.load_status_data(os.path.join(self.RESOURCE_FOLDER, "status.txt"))
         self.load_magic_type_data(os.path.join(self.RESOURCE_FOLDER, "magic_type.txt"))
         self.load_stat_data(os.path.join(self.RESOURCE_FOLDER, "stat.txt"))
+        self.load_ennemy_abilities_data(os.path.join(self.RESOURCE_FOLDER, "ennemy_abilities.txt"))
+        self.load_ennemy_abilities_type_data(os.path.join(self.RESOURCE_FOLDER, "ennemy_abilities_type.txt"))
 
     def load_devour_data(self, file):
         with (open(file, "r") as f):
@@ -80,13 +91,25 @@ class GameData():
             self.item_values = f.read().split('\n')
             for i in range(len(self.item_values)):
                 self.item_values[i] = self.item_values[i].split('<')[1]
+
     def load_status_data(self, file):
         with (open(file, "r") as f):
             self.status_values = f.read().split('\n')
+
     def load_magic_type_data(self, file):
         with (open(file, "r") as f):
             self.magic_type_values = f.read().split('\n')
+
     def load_stat_data(self, file):
         with (open(file, "r") as f):
             self.stat_values = f.read().split('\n')
 
+    def load_ennemy_abilities_data(self, file):
+        with (open(file, "r") as f):
+            self.ennemy_abilities_values = f.read().split('\n')
+            self.ennemy_abilities_values.insert(0, "Not defined")
+
+    def load_ennemy_abilities_type_data(self, file):
+        with (open(file, "r") as f):
+            self.ennemy_abilities_type_values = f.read().split('\n')
+            self.ennemy_abilities_type_values.insert(0, "Not defined")

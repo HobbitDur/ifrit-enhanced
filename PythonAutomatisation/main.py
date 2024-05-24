@@ -33,6 +33,7 @@ COL_STAT = 3
 COL_DEF = 14
 COL_ITEM = 17
 COL_MISC = 25
+COL_ABILITIES = 28
 ROW_FILE_DATA = 33
 COL_FILE_DATA = 0
 ROW_MAG = 1
@@ -46,10 +47,13 @@ COL_SHEET_HIGH_LVL = 5
 DEFAULT_MONSTER_LVL = 10
 COL_GRAPH_PER_LVL = 4
 ROW_GRAPH_PER_LVL = 33
+NB_MAX_ABILITIES = 16
 
 STAT_GRAPH_CELL_PLACEMENT = 'N34'
 STAT_GRAPH_WIDTH = 900
 STAT_GRAPH_HEIGHT = 500
+
+
 ########################################################################
 # Useful
 ########################################################################
@@ -89,7 +93,8 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
     for key, ennemy in ennemy_list.items():
 
         # Tab (sheet) creation. Checking name doesn't already exist
-        file_name = str(int(re.search(r'\d{3}', ennemy.origin_file_name).group())) + " - " + ennemy.name
+        file_index = int(re.search(r'\d{3}', ennemy.origin_file_name).group())
+        file_name = str(file_index) + " - " + ennemy.name
         if file_name == '':
             file_name = "Empty"
         while file_name in tab_list:
@@ -106,6 +111,7 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
         column_index['item'] = COL_ITEM
         column_index['misc'] = COL_MISC
         column_index['graph_stat'] = COL_GRAPH_PER_LVL + 1
+        column_index['abilities'] = COL_ABILITIES
 
         # Titles
         worksheet.write_row(0, COL_MONSTER_INFO, ["Monster info"], cell_format=column_title_style)
@@ -115,6 +121,14 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
         worksheet.write_row(0, column_index['item'] + 1, ["Low Level", "Number", "Medium Level", "Number", "High Level", "Number"],
                             cell_format=column_title_style)
         worksheet.write_row(0, column_index['misc'], ["Property name", "Value"], cell_format=column_title_style)
+        worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + "1:" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 2) + "1", "Low Level",
+                              cell_format=column_title_style)
+        worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 3) + "1:" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 5) + "1",
+                              "Medium Level", cell_format=column_title_style)
+        worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 6) + "1:" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 8) + "1",
+                              "High Level", cell_format=column_title_style)
+        worksheet.write_row(1, COL_ABILITIES, ["Type", "Ability", "Animation", "Type", "Ability", "Animation", "Type", "Ability", "Animation"],
+                            cell_format=column_title_style)
 
         # File info not link to the monster data
         worksheet.write(ROW_FILE_DATA, COL_FILE_DATA, "File data", column_title_style)
@@ -133,6 +147,7 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
         row_index['def'] = 1
         row_index['item'] = 1
         row_index['misc'] = 1
+        row_index['abilities'] = 2
         index = {}
         index['elem_def'] = 0
         index['status_def'] = 0
@@ -189,9 +204,9 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
                             # i corresponding to the monster level
                             # /10 because HP is too high to be plot correctly with others values.
                             str_formula = '=(FLOOR({}*({}*{}/20+{}),1) + 10*{} + {}*100*{} + 1000*{})/100'.format(stat_cell[0], monster_lvl_cell,
-                                                                                                                 monster_lvl_cell, monster_lvl_cell,
-                                                                                                                 stat_cell[1], stat_cell[2], monster_lvl_cell,
-                                                                                                                 stat_cell[3])
+                                                                                                                  monster_lvl_cell, monster_lvl_cell,
+                                                                                                                  stat_cell[1], stat_cell[2], monster_lvl_cell,
+                                                                                                                  stat_cell[3])
                             worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, border_style)
 
                     elif el['name'] == 'str' or el['name'] == 'mag':
@@ -317,7 +332,26 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
                     else:
                         worksheet.write(row_index['misc'], column_index['misc'] + 1, floor(el['value']), border_style)
                     row_index['misc'] += 1
+                # Abilities menu
+                elif el['name'] in game_data.ABILITIES_HIGHNESS_ORDER:
+                    for el2 in el['value']:
+                        ability_type = game_data.ennemy_abilities_type_values[el2['type']]
+                        str_id_added = "|(" + str(el2['id']) + ")"
+                        if ability_type == "Magic":
+                            ability_name = game_data.magic_values[el2['id']] + str_id_added
+                        elif ability_type == "Custom":
+                            ability_name = game_data.ennemy_abilities_values[el2['id']] + str_id_added
+                        elif ability_type == "Item":
+                            ability_name = game_data.item_values[el2['id']] + str_id_added
+                        else:
+                            ability_name = game_data.ennemy_abilities_values[el2['id']] + str_id_added
 
+                        worksheet.write(row_index['abilities'], column_index['abilities'], ability_type, border_style)
+                        worksheet.write(row_index['abilities'], column_index['abilities'] + 1, ability_name, border_style)
+                        worksheet.write(row_index['abilities'], column_index['abilities'] + 2, el2['animation'], border_style)
+                        row_index['abilities'] += 1
+                    row_index['abilities'] = 2
+                    column_index['abilities'] += 3
             except IndexError:
                 raise IndexError("Unknown error on file {} for monster name {}".format(key, ennemy.name))
 
@@ -424,6 +458,21 @@ def import_from_xlsx(file, ennemy, game_data):
             current_ennemy.data.append({'name': misc, 'value': value})
             row_index += 1
 
+        # Abilities reading
+        row_index = 3
+        col_index = COL_ABILITIES + 1
+
+
+        for abilities in game_data.ABILITIES_HIGHNESS_ORDER:
+            ability_set = []
+            for i in range(3, NB_MAX_ABILITIES + 3):
+                type = sheet.cell(i, col_index).value
+                ability_id = int(re.search(r'\d+', (sheet.cell(i, col_index + 1).value).split('|')[1]).group())
+                animation = int(sheet.cell(i, col_index + 2).value)
+                ability_set.append({'type': type, 'animation': animation, 'id': ability_id})
+            current_ennemy.data.append({'name': abilities, 'value': ability_set})
+            col_index += 3
+
 
 def write_to_dat(ennemy_list, game_data: GameData, path: str):
     for key, ennemy in ennemy_list.items():
@@ -450,29 +499,36 @@ def xlsx_to_dat(xlsx_file):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(prog="Ifrit Enhanced Command line",
-                                     description="This program allow you to quicly translate your battle.fs in an easy to edit xlsx file, and transform it back to battle.fs file")
+                                     description="This program allow you to quickly translate your battle.fs in an easy to edit xlsx file, and transform it "
+                                                 "back to battle.fs file")
     parser.add_argument("xlsx",
                         help="Define if you want to transform from battle.fs to xlsx or if you want to transform your modified xlsx back to a battle.fs",
-                        choices=["fs_to_xlsx", "xlsx_to_fs"])
+                        choices=["fs_to_xlsx", "xlsx_to_fs", "both"])
     parser.add_argument("-d", "--delete",
                         help="Delete temporary file created (.dat extracted for example). Only applied for xlsx_to_fs command, as the temporary files are needed to build back to battle.fs",
                         action='store_true')
+    parser.add_argument("-c", "--copy", help="Copy battle.fs to FF8 repository, expecting path to the FF8 folder", type=str)
+    parser.add_argument("-l", "--limit", help="Limit to two monster only to test", action='store_true')
+    parser.add_argument("-o", "--open", help="Open xlsx file for faster management", action='store_true')
+    parser.add_argument("--nopack", help="Doesn't create a pack, only let intermediate file. Only applied to fs_to_xlsx", action='store_true')
     args = parser.parse_args()
-    if args.xlsx == "fs_to_xlsx":
+
+    if args.xlsx == "fs_to_xlsx" or args.xlsx == "both":
         print("-------Unpacking fs file-------")
         fshandler.unpack(FOLDER_INPUT, FILE_INPUT_BATTLE)
 
         # Check if .dat exist
         file_monster = glob.glob(FILE_MONSTER_INPUT_REGEX)
-        file_monster = [file_monster[x] for x in range(2)]  # Just to not work on all files everytime
+
         if not file_monster:
             raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
-
+        if args.limit:
+            file_monster = [file_monster[1]]  # Just to not work on all files everytime
         print("-------Transforming dat to XLSX-------")
         os.makedirs(FOLDER_OUTPUT, exist_ok=True)
         dat_to_xlsx(file_monster)
 
-    if args.xlsx == "xlsx_to_fs":
+    if args.xlsx == "xlsx_to_fs" or args.xlsx == "both":
         print("-------Copying files from input to output-------")
         # Copying files from Input to Output before modifying
         os.makedirs(FILE_OUTPUT_BATTLE, exist_ok=True)
@@ -482,8 +538,10 @@ if __name__ == "__main__":
         print("-------Transforming XLSX to dat-------")
         xlsx_to_dat(FILE_XLSX)
 
-        print("-------Packing to fs file-------")
-        fshandler.pack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
+
+        if not args.nopack:
+            print("-------Packing to fs file-------")
+            fshandler.pack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
         if args.delete:
             # Delete files
             print("-------Deleting files-------")
@@ -491,3 +549,9 @@ if __name__ == "__main__":
             shutil.rmtree(FILE_INPUT_BATTLE)
             ## Delete dat files in OutputFiles (in Output file)
             shutil.rmtree(os.path.join(FILE_OUTPUT_BATTLE, "fre"))
+
+    if args.copy:
+        for file in glob.glob(os.path.join(FILE_OUTPUT_BATTLE, "battle.*")):
+            shutil.copy(file, args.copy)
+    if args.open:
+        os.startfile(FILE_XLSX)
