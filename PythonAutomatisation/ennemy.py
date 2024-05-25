@@ -31,7 +31,6 @@ class Ennemy():
             data_pointer = game_data.USEFUL_DATA_POINTER['offset']
         self.pointer_data_start = int.from_bytes(self.file_raw_data[data_pointer:data_pointer + game_data.USEFUL_DATA_POINTER['size']],
                                                  game_data.USEFUL_DATA_POINTER["byteorder"])
-
         self.origin_file_name = os.path.basename(file)
         self.origin_file_checksum = get_checksum(file, algorithm='SHA256')
 
@@ -80,10 +79,8 @@ class Ennemy():
                 value = []
                 for i in range(0, el['size'] - 1, 2):
                     value.append({'ID': list_data[i], 'value': list_data[i + 1]})
-
             elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
-                value = int.from_bytes(raw_data_selected) * 100 / 256
-
+                value = int.from_bytes(raw_data_selected) * 100 / 255
             elif el['name'] in ['elem_def']:  # Case with elem
                 value = list(raw_data_selected)
                 for i in range(el['size']):
@@ -92,7 +89,7 @@ class Ennemy():
                 list_data = list(raw_data_selected)
                 value = []
                 for i in range(0, el['size'] - 1, 4):
-                    value.append({'type': list_data[i], 'animation': list_data[i + 1], 'id': int.from_bytes(list_data[i + 2:i + 3], el['byteorder'])})
+                    value.append({'type': list_data[i], 'animation': list_data[i + 1], 'id': int.from_bytes(list_data[i + 2:i + 4], el['byteorder'])})
             elif el['name'] in ['status_def']:  # Case with elem
                 value = list(raw_data_selected)
                 for i in range(el['size']):
@@ -124,7 +121,7 @@ class Ennemy():
                     value_to_set.append(el2['value'])
                 value_to_set = bytes(value_to_set)
             elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
-                value_to_set = floor(el['value'] * 256 / 100).to_bytes()
+                value_to_set = round((el['value'] * 255 / 100)).to_bytes()
             elif el['name'] in ['elem_def']:  # Case with elem
                 value_to_set = []
                 for i in range(len(el['value'])):
@@ -138,7 +135,7 @@ class Ennemy():
             elif el['name'] in game_data.ABILITIES_HIGHNESS_ORDER:
                 value_to_set = bytearray()
                 for el2 in el['value']:
-                    value_to_set.extend(game_data.ennemy_abilities_type_values.index(el2['type']).to_bytes())
+                    value_to_set.extend(el2['type'].to_bytes())
                     value_to_set.extend(el2['animation'].to_bytes())
                     value_to_set.extend(el2['id'].to_bytes(2, property_elem['byteorder']))
                 value_to_set = bytes(value_to_set)

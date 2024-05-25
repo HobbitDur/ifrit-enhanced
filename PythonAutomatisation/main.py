@@ -53,6 +53,12 @@ STAT_GRAPH_CELL_PLACEMENT = 'N34'
 STAT_GRAPH_WIDTH = 900
 STAT_GRAPH_HEIGHT = 500
 
+REF_DATA_COL_ABILITIES_TYPE = 0
+REF_DATA_COL_ABILITIES = 1
+REF_DATA_COL_MAGIC = 2
+REF_DATA_COL_ITEM = 3
+REF_DATA_SHEET_TITLE = 'ref_data'
+
 
 ########################################################################
 # Useful
@@ -82,13 +88,12 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
     title_status_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b9b085'})
     title_drop_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#ccc0da'})
     title_mug_style = workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#7aeca0'})
-    percent_style = workbook.add_format({'num_format': '0%', 'border': 1})
+    percent_style = workbook.add_format({'num_format': '#,##0.00%', 'border': 1})
 
     # Chart
     ## Stat chart
 
     chart_stat = {}
-    chart_series = {}
     tab_list = []
     for key, ennemy in ennemy_list.items():
 
@@ -311,24 +316,24 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
                         if 'mag' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Draw {}".format(index['draw']), title_magic_style)
                             index['draw'] += 1
-                            worksheet.write(row_index['item'], col_index, game_data.magic_values[el2['ID']], magic_style)
+                            worksheet.write(row_index['item'], col_index, game_data.magic_values[el2['ID']]['ref'], magic_style)
                             worksheet.write(row_index['item'], col_index + 1, el2['value'], magic_style)
                         elif 'mug' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Mug {}".format(index['mug']), title_mug_style)
                             index['mug'] += 1
-                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']], mug_style)
+                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']]['ref'], mug_style)
                             worksheet.write(row_index['item'], col_index + 1, el2['value'], mug_style)
                         elif 'drop' in el['name']:
                             worksheet.write(row_index['item'], column_index['item'], "Drop {}".format(index['drop']), title_drop_style)
                             index['drop'] += 1
-                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']], drop_style)
+                            worksheet.write(row_index['item'], col_index, game_data.item_values[el2['ID']]['ref'], drop_style)
                             worksheet.write(row_index['item'], col_index + 1, el2['value'], drop_style)
                         row_index['item'] += 1
                 # Misc menu
                 elif el['name'] in game_data.MISC_ORDER:
                     worksheet.write(row_index['misc'], column_index['misc'], el['pretty_name'], row_title_style)
                     if el['name'] == "mug_rate" or el['name'] == "drop_rate":  # Percent style need to divide by 100
-                        worksheet.write(row_index['misc'], column_index['misc'] + 1, floor(el['value']) / 100, percent_style)
+                        worksheet.write(row_index['misc'], column_index['misc'] + 1, el['value'] / 100, percent_style)
                     else:
                         worksheet.write(row_index['misc'], column_index['misc'] + 1, floor(el['value']), border_style)
                     row_index['misc'] += 1
@@ -336,18 +341,34 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
                 elif el['name'] in game_data.ABILITIES_HIGHNESS_ORDER:
                     for el2 in el['value']:
                         ability_type = game_data.ennemy_abilities_type_values[el2['type']]
-                        str_id_added = "|(" + str(el2['id']) + ")"
-                        if ability_type == "Magic":
-                            ability_name = game_data.magic_values[el2['id']] + str_id_added
-                        elif ability_type == "Custom":
-                            ability_name = game_data.ennemy_abilities_values[el2['id']] + str_id_added
-                        elif ability_type == "Item":
-                            ability_name = game_data.item_values[el2['id']] + str_id_added
+                        if ability_type['name'] == "Magic":
+                            ability_name = game_data.magic_values[el2['id']]['ref']
+                            col_ab_str = xlsxwriter.utility.xl_col_to_name(REF_DATA_COL_MAGIC)
+                        elif ability_type['name'] == "Custom":
+                            ability_name = game_data.ennemy_abilities_values[el2['id']]['ref']
+                            col_ab_str = xlsxwriter.utility.xl_col_to_name(REF_DATA_COL_ABILITIES)
+                        elif ability_type['name'] == "Item":
+                            ability_name = game_data.item_values[el2['id']]['ref']
+                            col_ab_str = xlsxwriter.utility.xl_col_to_name(REF_DATA_COL_ITEM)
                         else:
-                            ability_name = game_data.ennemy_abilities_values[el2['id']] + str_id_added
+                            if el2['id'] < len(game_data.ennemy_abilities_values):
+                                ability_name = game_data.ennemy_abilities_values[el2['id']]['ref']
+                            else:
+                                game_data.ennemy_abilities_values[el2['id']] = {'name':"Temp Garbage", 'ref':str(el2['id']) + ":Temp Garbage"}
+                                ability_name = game_data.ennemy_abilities_values[el2['id']]['ref']
+                            col_ab_str = xlsxwriter.utility.xl_col_to_name(REF_DATA_COL_ABILITIES)
 
-                        worksheet.write(row_index['abilities'], column_index['abilities'], ability_type, border_style)
+                        worksheet.write(row_index['abilities'], column_index['abilities'], ability_type['ref'], border_style)
+                        # Excel data validation
+                        col_str = xlsxwriter.utility.xl_col_to_name(REF_DATA_COL_ABILITIES_TYPE)
+                        source_str = '=' + REF_DATA_SHEET_TITLE + '!$' + col_str + '1:$' + col_str + '$245'
+                        worksheet.data_validation(row_index['abilities'], column_index['abilities'], row_index['abilities'], column_index['abilities'],
+                                                  {'validate': 'list', 'source': source_str})
                         worksheet.write(row_index['abilities'], column_index['abilities'] + 1, ability_name, border_style)
+                        source_str = '=' + REF_DATA_SHEET_TITLE + '!$' + col_ab_str + '1:$' + col_ab_str + '$384'
+                        worksheet.data_validation(row_index['abilities'], column_index['abilities'] + 1, row_index['abilities'], column_index['abilities'] + 1,
+                                                  {'validate': 'list', 'source': source_str})
+
                         worksheet.write(row_index['abilities'], column_index['abilities'] + 2, el2['animation'], border_style)
                         row_index['abilities'] += 1
                     row_index['abilities'] = 2
@@ -355,13 +376,27 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
             except IndexError:
                 raise IndexError("Unknown error on file {} for monster name {}".format(key, ennemy.name))
 
+        # Chart management
         chart_stat[ennemy].set_title({'name': 'Stat graph'})
         chart_stat[ennemy].set_x_axis({'name': 'Level'})
         chart_stat[ennemy].set_y_axis({'name': 'Stat'})
         chart_stat[ennemy].set_size({'width': STAT_GRAPH_WIDTH, 'height': STAT_GRAPH_HEIGHT})
 
         worksheet.insert_chart(STAT_GRAPH_CELL_PLACEMENT, chart_stat[ennemy])
+
         worksheet.autofit()
+
+    # Creating reference data on last tab
+    worksheet = workbook.add_worksheet(REF_DATA_SHEET_TITLE)
+    for index, el in game_data.ennemy_abilities_type_values.items():
+        worksheet.write(index, REF_DATA_COL_ABILITIES_TYPE, el['ref'])
+    for index, el in game_data.ennemy_abilities_values.items():
+        worksheet.write(index, REF_DATA_COL_ABILITIES, el['ref'])
+    for index, el in game_data.magic_values.items():
+        worksheet.write(index, REF_DATA_COL_MAGIC, el['ref'])
+    for index, el in game_data.item_values.items():
+        worksheet.write(index, REF_DATA_COL_ITEM, el['ref'])
+    worksheet.autofit()
     workbook.close()
 
 
@@ -400,6 +435,8 @@ def import_from_xlsx(file, ennemy, game_data):
     """
     wb = load_workbook(file)
     for sheet in wb:
+        if sheet.title == REF_DATA_SHEET_TITLE:
+            continue
         ennemy_origin_file = sheet.cell(ROW_FILE_DATA + 1 + 1, COL_FILE_DATA + 1 + 1).value
         ennemy[ennemy_origin_file] = Ennemy()
         current_ennemy = ennemy[ennemy_origin_file]
@@ -435,11 +472,7 @@ def import_from_xlsx(file, ennemy, game_data):
             for sub in sub_item:
                 name = sub + "_" + el
                 for i in range(4):
-                    str_data = sheet.cell(row_index + i, col_index).value
-                    if el == 'mag':
-                        id_value = [ind for ind, x in enumerate(game_data.magic_values) if x == str_data][0]
-                    elif el == 'mug' or el == 'drop':
-                        id_value = [ind for ind, x in enumerate(game_data.item_values) if x == str_data][0]
+                    id_value = int(sheet.cell(row_index + i, col_index).value.split(':')[0])
                     value = sheet.cell(row_index + i, col_index + 1).value
                     list_value.append({'ID': id_value, 'value': value})
                 current_ennemy.data.append({'name': name, 'value': list_value})
@@ -459,15 +492,12 @@ def import_from_xlsx(file, ennemy, game_data):
             row_index += 1
 
         # Abilities reading
-        row_index = 3
         col_index = COL_ABILITIES + 1
-
-
         for abilities in game_data.ABILITIES_HIGHNESS_ORDER:
             ability_set = []
             for i in range(3, NB_MAX_ABILITIES + 3):
-                type = sheet.cell(i, col_index).value
-                ability_id = int(re.search(r'\d+', (sheet.cell(i, col_index + 1).value).split('|')[1]).group())
+                type = int(sheet.cell(i, col_index).value.split(':')[0])
+                ability_id = int(sheet.cell(i, col_index+1).value.split(':')[0])
                 animation = int(sheet.cell(i, col_index + 2).value)
                 ability_set.append({'type': type, 'animation': animation, 'id': ability_id})
             current_ennemy.data.append({'name': abilities, 'value': ability_set})
@@ -523,7 +553,7 @@ if __name__ == "__main__":
         if not file_monster:
             raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
         if args.limit:
-            file_monster = [file_monster[1]]  # Just to not work on all files everytime
+            file_monster = [file_monster[0]]  # Just to not work on all files everytime
         print("-------Transforming dat to XLSX-------")
         os.makedirs(FOLDER_OUTPUT, exist_ok=True)
         dat_to_xlsx(file_monster)
@@ -538,10 +568,9 @@ if __name__ == "__main__":
         print("-------Transforming XLSX to dat-------")
         xlsx_to_dat(FILE_XLSX)
 
-
         if not args.nopack:
             print("-------Packing to fs file-------")
-            fshandler.pack(FILE_BATTLE_SPECIAL_PATH_FORMAT, FILE_OUTPUT_BATTLE)
+            fshandler.pack(FILE_MONSTER_INPUT_PATH, FILE_OUTPUT_BATTLE)
         if args.delete:
             # Delete files
             print("-------Deleting files-------")

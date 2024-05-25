@@ -49,13 +49,13 @@ class GameData():
     def __init__(self):
         self.devour_values = []
         self.card_values = []
-        self.magic_values = []
-        self.item_values = []
+        self.magic_values = {}
+        self.item_values = {}
         self.status_values = []
         self.magic_type_values = []
         self.stat_values = []
-        self.ennemy_abilities_values = []
-        self.ennemy_abilities_type_values = []
+        self.ennemy_abilities_values = {}
+        self.ennemy_abilities_type_values = {}
 
     def load_all(self):
         self.load_card_data(os.path.join(self.RESOURCE_FOLDER, "card.txt"))
@@ -82,15 +82,17 @@ class GameData():
 
     def load_magic_data(self, file):
         with (open(file, "r") as f):
-            self.magic_values = f.read().split('\n')
-            for i in range(len(self.magic_values)):
-                self.magic_values[i] = self.magic_values[i].split('<')[1]
+            file_split = f.read().split('\n')
+            for el_split in file_split:
+                self.magic_values[int(el_split.split('<')[0], 16)] = {'name': el_split.split('<')[1],
+                                                                             'ref': str(int(el_split.split('<')[0], 16)) + ":"+ el_split.split('<')[1]}
 
     def load_item_data(self, file):
         with (open(file, "r") as f):
-            self.item_values = f.read().split('\n')
-            for i in range(len(self.item_values)):
-                self.item_values[i] = self.item_values[i].split('<')[1]
+            file_split = f.read().split('\n')
+            for el_split in file_split:
+                self.item_values[int(el_split.split('<')[0], 16)] = {'name': el_split.split('<')[1],
+                                                                             'ref': str(int(el_split.split('<')[0], 16)) + ":"+ el_split.split('<')[1]}
 
     def load_status_data(self, file):
         with (open(file, "r") as f):
@@ -99,17 +101,20 @@ class GameData():
     def load_magic_type_data(self, file):
         with (open(file, "r") as f):
             self.magic_type_values = f.read().split('\n')
-
     def load_stat_data(self, file):
         with (open(file, "r") as f):
             self.stat_values = f.read().split('\n')
 
     def load_ennemy_abilities_data(self, file):
         with (open(file, "r") as f):
-            self.ennemy_abilities_values = f.read().split('\n')
-            self.ennemy_abilities_values.insert(0, "Not defined")
+            file_split = f.read().split('\n')
+            for el_split in file_split:
+                self.ennemy_abilities_values[int(el_split.split('>')[0])] = {'name': el_split.split('>')[1],
+                                                                             'ref': el_split.split('>')[0] + ":"+ el_split.split('>')[1]}
 
     def load_ennemy_abilities_type_data(self, file):
         with (open(file, "r") as f):
-            self.ennemy_abilities_type_values = f.read().split('\n')
-            self.ennemy_abilities_type_values.insert(0, "Not defined")
+            file_split = f.read().split('\n')
+            for el_split in file_split:
+                self.ennemy_abilities_type_values[int(el_split.split('>')[0])] = {'name': el_split.split('>')[1],
+                                                                                  'ref': el_split.split('>')[0] + ":" + el_split.split('>')[1]}
