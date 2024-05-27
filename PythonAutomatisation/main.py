@@ -34,13 +34,15 @@ COL_DEF = 14
 COL_ITEM = 17
 COL_MISC = 25
 COL_ABILITIES = 28
-ROW_FILE_DATA = 33
+ROW_FILE_DATA = 42
 COL_FILE_DATA = 0
 ROW_MAG = 1
 ROW_MUG = 5
 ROW_DROP = 9
-ROW_MONSTER_LVL = 2
 ROW_MONSTER_NAME = 1
+ROW_MONSTER_LVL = 2
+ROW_MONSTER_COMBAT_TEXT = 3
+
 COL_SHEET_LOW_LVL = 1
 COL_SHEET_MED_LVL = 3
 COL_SHEET_HIGH_LVL = 5
@@ -59,7 +61,9 @@ REF_DATA_COL_MAGIC = 2
 REF_DATA_COL_ITEM = 3
 REF_DATA_SHEET_TITLE = 'ref_data'
 
-
+MAX_COMBAT_TXT = 8
+MAX_SHEET_TITLE_SIZE = 31
+INVALID_CHAR_TITLE_EXCEL_LIST = ['[',']', ':', '*', '?', '/', '\\']
 ########################################################################
 # Useful
 ########################################################################
@@ -105,6 +109,10 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
         while file_name in tab_list:
             file_name += " dub"
 
+        if len(file_name) > MAX_SHEET_TITLE_SIZE:
+            file_name = file_name[:MAX_SHEET_TITLE_SIZE]
+        for char in INVALID_CHAR_TITLE_EXCEL_LIST:
+            file_name = file_name.replace(char, ';')
         worksheet = workbook.add_worksheet(file_name)
         chart_stat[ennemy] = workbook.add_chart({'type': 'line'})
         tab_list.append(file_name)
@@ -162,6 +170,10 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
         worksheet.write(ROW_MONSTER_LVL, COL_MONSTER_INFO + 1, DEFAULT_MONSTER_LVL, border_style)
         worksheet.write(ROW_MONSTER_NAME, COL_MONSTER_INFO, "Name", row_title_style)
         worksheet.write(ROW_MONSTER_NAME, COL_MONSTER_INFO + 1, ennemy.name, border_style)
+
+        for i in range(len(ennemy.text_battle)):
+            worksheet.write(ROW_MONSTER_COMBAT_TEXT + i, COL_MONSTER_INFO, "Combat text {}".format(i), row_title_style)
+            worksheet.write(ROW_MONSTER_COMBAT_TEXT + i, COL_MONSTER_INFO + 1, "{}".format(ennemy.text_battle[i]), border_style)
 
         # Filling the Excel
         for el in ennemy.data:
@@ -435,13 +447,16 @@ def import_from_xlsx(file, ennemy, game_data):
     """
     wb = load_workbook(file)
     for sheet in wb:
+
         if sheet.title == REF_DATA_SHEET_TITLE:
             continue
+
         ennemy_origin_file = sheet.cell(ROW_FILE_DATA + 1 + 1, COL_FILE_DATA + 1 + 1).value
         ennemy[ennemy_origin_file] = Ennemy()
         current_ennemy = ennemy[ennemy_origin_file]
         current_ennemy.name = sheet.title
         ennemy[ennemy_origin_file].origin_file_name = ennemy_origin_file
+        current_ennemy.data = [] # Reseting data as we need this var empty. It has been loaded to find others value like pointer
         # Stat reading
         row_index = 2
         for stat in game_data.stat_values:
@@ -503,6 +518,15 @@ def import_from_xlsx(file, ennemy, game_data):
             current_ennemy.data.append({'name': abilities, 'value': ability_set})
             col_index += 3
 
+        #Text reading
+        combat_text_list = []
+        for i in range(MAX_COMBAT_TXT):
+            txt_value = sheet.cell(ROW_MONSTER_COMBAT_TEXT + 1+ i, 2).value
+            if txt_value:
+                combat_text_list.append(txt_value)
+            else:
+                break
+        current_ennemy.data.append({'name': 'combat_text', 'value': combat_text_list})
 
 def write_to_dat(ennemy_list, game_data: GameData, path: str):
     for key, ennemy in ennemy_list.items():
@@ -537,8 +561,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--delete",
                         help="Delete temporary file created (.dat extracted for example). Only applied for xlsx_to_fs command, as the temporary files are needed to build back to battle.fs",
                         action='store_true')
-    parser.add_argument("-c", "--copy", help="Copy battle.fs to FF8 repository, expecting path to the FF8 folder", type=str)
-    parser.add_argument("-l", "--limit", help="Limit to two monster only to test", action='store_true')
+    parser.add_argument("-c", "--copy", help="Copy battle.fs to FF8 repository and to direct folder, expecting path to the FF8 folder", type=str)
+    parser.add_argument("-cf", "--copyfile", help="Work only on file given", type=int)
+    parser.add_argument("-l", "--limit", help="Limit to one monster only to test", action='store_true')
     parser.add_argument("-o", "--open", help="Open xlsx file for faster management", action='store_true')
     parser.add_argument("--nopack", help="Doesn't create a pack, only let intermediate file. Only applied to fs_to_xlsx", action='store_true')
     args = parser.parse_args()
@@ -553,7 +578,9 @@ if __name__ == "__main__":
         if not file_monster:
             raise FileNotFoundError("No .dat files found in {}".format(FILE_MONSTER_INPUT_PATH))
         if args.limit:
-            file_monster = [file_monster[0]]  # Just to not work on all files everytime
+            file_monster = [file_monster[9]]  # Just to not work on all files everytime
+        if args.copyfile:
+            file_monster = [file_monster[args.copyfile]]  # Just to not work on all files everytime
         print("-------Transforming dat to XLSX-------")
         os.makedirs(FOLDER_OUTPUT, exist_ok=True)
         dat_to_xlsx(file_monster)
@@ -582,5 +609,7 @@ if __name__ == "__main__":
     if args.copy:
         for file in glob.glob(os.path.join(FILE_OUTPUT_BATTLE, "battle.*")):
             shutil.copy(file, args.copy)
+        for file in glob.glob(os.path.join(FILE_MONSTER_OUTPUT_PATH, "*.*")):
+            shutil.copy(file, os.path.join (args.copy, '..', '..', 'direct', 'battle'))
     if args.open:
         os.startfile(FILE_XLSX)
