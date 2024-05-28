@@ -154,7 +154,7 @@ class GameData():
             if hex_val == 0x00:
                 pass
             elif hex_val in [0x01, 0x02]:
-                str += self.translate_hex_to_str_table[i]
+                str += self.translate_hex_to_str_table[hex_val]
             elif hex_val == 0x03:  # {Name}
                 i += 1
                 if i < hex_size:
@@ -193,7 +193,7 @@ class GameData():
                     if hex_val >= 0x20 and hex_val <= 0x2f:
                         str += '{' + self.COLOR_LIST[hex_val - 0x20] + '}'
                     else:
-                        str += "{{x06{:02x}}".format(hex_val)
+                        str += "{{x06{:02x}}}".format(hex_val)
                 else:
                     str += "{x06}"
             elif hex_val == 0x09:  # {Wait000}
