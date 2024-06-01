@@ -1,256 +1,256 @@
-00< Not defined
-01<Geezard
-02<Fungar
-03<Bite Bug
-04<Red Bat
-05<Blobra
-06<Gayla
-07<Gesper
-08<Fastitocalon-F
-09<Blood Soul
-0A<Caterchipillar
-0B<Cockatrice
-0C<Grat
-0D<Buel
-0E<Mesmerize
-0F<Glacial Eyed
-10<Belhelmel
-11<Thrustaevis
-12<Anacondaur
-13<Creeps
-14<Grendel
-15<Jelleye
-16<Grand Mantis
-17<Forbidden
-18<Armadodo
-19<TriFace
-1A<Fastitcalon
-1B<Snow Lion
-1C<Ochu
-1D<SAM08G
-1E<Death Claw
-1F<Cactaur
-20<Tonberry
-21<Abyss Worm
-22<Turtapod
-23<Vysage
-24<T-Rexaur
-25<Bomb
-26<Blitz
-27<Wendigo
-28<Torama
-29<Imp
-2A<Blue Dragon
-2B<Adamantiose
-2C<Hexadragon
-2D<Iron Giant
-2E<Behemoth
-2F<Chimera
-30<PuPu
-31<Elastiod
-32<GIM47N
-33<Malboro
-34<Ruby Dragon
-35<Elnoyle
-36<Tonberry King
-37<Wedge, Biggs
-38<Fujin, Raijin
-39<Elvoret
-3A<X-ATM092
-3B<Grenaldo
-3C<Gerogero
-3D<Iguion
-3E<Abadon
-3F<Trauma
-40<Oilboyle
-41<Shumi Tribe
-42<Krysta
-43<Propagator
-44<Jumbo Cactaur
-45<Tri-Point
-46<Gargantua
-47<Mobile Type 8
-48<Sphinxara
-49<Tiamat
-4A<BGH251F2
-4B<Red Giant
-4C<Catoblepas
-4D<Ultima Weapon
-4E<Chubby Chocobo
-4F<Angelo
-50<Gilgamesh
-51<MinMog
-52<Chicobo
-53<Quezacotl
-54<Shiva
-55<Ifrit
-56<Siren
-57<Sacred
-58<Minotaur
-59<Carbuncle
-5A<Diablos
-5B<Leviathan
-5C<Odin
-5D<Pandemonia
-5E<Cerberus
-5F<Alexander
-60<Phoenix
-61<Bahumut
-62<Doomtrain
-63<Eden
-64<Ward
-65<Kiros
-66<Laguna
-67<Selphie
-68<Quistis
-69<Irvine
-6A<Zell
-6B<Rinoa
-6C<Edea
-6D<Seifer
-6E<Squall
+00<Geezard
+01<Fungar
+02<Bite Bug
+03<Red Bat
+04<Blobra
+05<Gayla
+06<Gesper
+07<Fastitocalon-F
+08<Blood Soul
+09<Caterchipillar
+0A<Cockatrice
+0B<Grat
+0C<Buel
+0D<Mesmerize
+0E<Glacial Eyed
+0F<Belhelmel
+10<Thrustaevis
+11<Anacondaur
+12<Creeps
+13<Grendel
+14<Jelleye
+15<Grand Mantis
+16<Forbidden
+17<Armadodo
+18<TriFace
+19<Fastitcalon
+1A<Snow Lion
+1B<Ochu
+1C<SAM08G
+1D<Death Claw
+1E<Cactaur
+1F<Tonberry
+20<Abyss Worm
+21<Turtapod
+22<Vysage
+23<T-Rexaur
+24<Bomb
+25<Blitz
+26<Wendigo
+27<Torama
+28<Imp
+29<Blue Dragon
+2A<Adamantiose
+2B<Hexadragon
+2C<Iron Giant
+2D<Behemoth
+2E<Chimera
+2F<PuPu
+30<Elastiod
+31<GIM47N
+32<Malboro
+33<Ruby Dragon
+34<Elnoyle
+35<Tonberry King
+36<Wedge, Biggs
+37<Fujin, Raijin
+38<Elvoret
+39<X-ATM092
+3A<Grenaldo
+3B<Gerogero
+3C<Iguion
+3D<Abadon
+3E<Trauma
+3F<Oilboyle
+40<Shumi Tribe
+41<Krysta
+42<Propagator
+43<Jumbo Cactaur
+44<Tri-Point
+45<Gargantua
+46<Mobile Type 8
+47<Sphinxara
+48<Tiamat
+49<BGH251F2
+4A<Red Giant
+4B<Catoblepas
+4C<Ultima Weapon
+4D<Chubby Chocobo
+4E<Angelo
+4F<Gilgamesh
+50<MinMog
+51<Chicobo
+52<Quezacotl
+53<Shiva
+54<Ifrit
+55<Siren
+56<Sacred
+57<Minotaur
+58<Carbuncle
+59<Diablos
+5A<Leviathan
+5B<Odin
+5C<Pandemonia
+5D<Cerberus
+5E<Alexander
+5F<Phoenix
+60<Bahumut
+61<Doomtrain
+62<Eden
+63<Ward
+64<Kiros
+65<Laguna
+66<Selphie
+67<Quistis
+68<Irvine
+69<Zell
+6A<Rinoa
+6B<Edea
+6C<Seifer
+6D<Squall
+6E<Unknown
+6F<Unknown
+70<Unknown
+71<Unknown
+72<Unknown
+73<Unknown
+74<Unknown
+75<Unknown
+76<Unknown
+77<Unknown
+78<Unknown
+79<Unknown
+7A<Unknown
+7B<Unknown
+7C<Unknown
+7D<Unknown
+7E<Unknown
+7F<Unknown
+80<Unknown
+81<Unknown
+82<Unknown
+83<Unknown
+84<Unknown
+85<Unknown
+86<Unknown
+87<Unknown
+88<Unknown
+89<Unknown
+8A<Unknown
+8B<Unknown
+8C<Unknown
+8D<Unknown
+8E<Unknown
+8F<Unknown
+90<Unknown
+91<Unknown
+92<Unknown
+93<Unknown
+94<Unknown
+95<Unknown
+96<Unknown
+97<Unknown
+98<Unknown
+99<Unknown
+9A<Unknown
+9B<Unknown
+9C<Unknown
+9D<Unknown
+9E<Unknown
+9F<Unknown
+A0<Unknown
+A1<Unknown
+A2<Unknown
+A3<Unknown
+A4<Unknown
+A5<Unknown
+A6<Unknown
+A7<Unknown
+A8<Unknown
+A9<Unknown
+AA<Unknown
+AB<Unknown
+AC<Unknown
+AD<Unknown
+AE<Unknown
+AF<Unknown
+B0<Unknown
+B1<Unknown
+B2<Unknown
+B3<Unknown
+B4<Unknown
+B5<Unknown
+B6<Unknown
+B7<Unknown
+B8<Unknown
+B9<Unknown
+BA<Unknown
+BB<Unknown
+BC<Unknown
+BD<Unknown
+BE<Unknown
+BF<Unknown
+C0<Unknown
+C1<Unknown
+C2<Unknown
+C3<Unknown
+C4<Unknown
+C5<Unknown
+C6<Unknown
+C7<Unknown
+C8<Unknown
+C9<Unknown
+CA<Unknown
+CB<Unknown
+CC<Unknown
+CD<Unknown
+CE<Unknown
+CF<Unknown
+D0<Unknown
+D1<Unknown
+D2<Unknown
+D3<Unknown
+D4<Unknown
+D5<Unknown
+D6<Unknown
+D7<Unknown
+D8<Unknown
+D9<Unknown
+DA<Unknown
+DB<Unknown
+DC<Unknown
+DD<Unknown
+DE<Unknown
+DF<Unknown
+E0<Unknown
+E1<Unknown
+E2<Unknown
+E3<Unknown
+E4<Unknown
+E5<Unknown
+E6<Unknown
+E7<Unknown
+E8<Unknown
+E9<Unknown
+EA<Unknown
+EB<Unknown
+EC<Unknown
+ED<Unknown
+EE<Unknown
+EF<Unknown
+F0<Unknown
+F1<Unknown
+F2<Unknown
+F3<Unknown
+F4<Unknown
+F5<Unknown
+F6<Unknown
+F7<Unknown
+F8<Unknown
+F9<Unknown
+FA<Unknown
+FB<Unknown
+FC<Unknown
+FD<Unknown
 FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-FE<Unknown
-C8<Unknown 0xC8
-C9<Unknown 0xC9
-CA<Unknown 0xCA
-CB<Unknown 0xCB
-CC<Unknown 0xCC
-CD<Unknown 0xCD
-CE<Unknown 0xCE
-CF<Unknown 0xCF
-D0<Unknown 0xD0
-D1<Unknown 0xD1
-D2<Unknown 0xD2
-D3<Unknown 0xD3
-D4<Unknown 0xD4
-D5<Unknown 0xD5
-D6<Unknown 0xD6
-D7<Unknown 0xD7
-D8<Unknown 0xD8
-D9<Unknown 0xD9
-DA<Unknown 0xDA
-DB<Unknown 0xDB
-DC<Unknown 0xDC
-DD<Unknown 0xDD
-DE<Unknown 0xDE
-DF<Unknown 0xDF
-E0<Unknown 0xE0
-E1<Unknown 0xE1
-E2<Unknown 0xE2
-E3<Unknown 0xE3
-E4<Unknown 0xE4
-E5<Unknown 0xE5
-E6<Unknown 0xE6
-E7<Unknown 0xE7
-E8<Unknown 0xE8
-E9<Unknown 0xE9
-EA<Unknown 0xEA
-EB<Unknown 0xEB
-EC<Unknown 0xEC
-ED<Unknown 0xED
-EE<Unknown 0xEE
-EF<Unknown 0xEF
-F0<Unknown 0xF0
-F1<Unknown 0xF1
-F2<Unknown 0xF2
-F3<Unknown 0xF3
-F4<Unknown 0xF4
-F5<Unknown 0xF5
-F6<Unknown 0xF6
-F7<Unknown 0xF7
-F8<Unknown 0xF8
-F9<Unknown 0xF9
-FA<Unknown 0xFA
-FB<Unknown 0xFB
-FC<Unknown 0xFC
-FD<Unknown 0xFD
-FE<Unknown 0xFE
 FF<Immune
