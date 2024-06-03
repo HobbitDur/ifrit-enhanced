@@ -46,7 +46,8 @@ class GameData():
     ELEM_DEF_DATA = {'offset': 0x160, 'size': 8, 'byteorder': 'big', 'name': 'elem_def', 'pretty_name': 'Elemental def'}
     STATUS_DEF_DATA = {'offset': 0x168, 'size': 20, 'byteorder': 'big', 'name': 'status_def', 'pretty_name': 'Status def'}
     SECTION_INFO_STAT_BYTE_FLAG_0 = {'offset': 0xF6, 'size': 1, 'byteorder': 'little', 'name': 'byte_flag_0', 'pretty_name': 'Byte Flag 0'}
-    SECTION_INFO_STAT_BYTE_FLAG_0_LIST_VALUE = ['byte0_zz1', 'byte0_zz2', 'byte0_zz3', 'byte0_unused4', 'byte0_unused5', 'byte0_unused6', 'byte0_unused7', 'byte0_unused8']
+    SECTION_INFO_STAT_BYTE_FLAG_0_LIST_VALUE = ['byte0_zz1', 'byte0_zz2', 'byte0_zz3', 'byte0_unused4', 'byte0_unused5', 'byte0_unused6', 'byte0_unused7',
+                                                'byte0_unused8']
     SECTION_INFO_STAT_BYTE_FLAG_1 = {'offset': 0xF7, 'size': 1, 'byteorder': 'little', 'name': 'byte_flag_1', 'pretty_name': 'Byte Flag 1'}
     SECTION_INFO_STAT_BYTE_FLAG_1_LIST_VALUE = ['Zombie', 'Fly', 'byte1_zz1', 'Immune NVPlus_Moins', 'Hidden HP', 'Auto-Reflect', 'Auto-Shell', 'Auto-Protect']
     CARD_DATA = {'offset': 0xF8, 'size': 3, 'byteorder': 'big', 'name': 'card', 'pretty_name': 'Card data'}
@@ -55,21 +56,24 @@ class GameData():
     SECTION_INFO_STAT_BYTE_FLAG_2_LIST_VALUE = ['byte2_zz1', 'byte2_zz2', 'byte2_unused_3', 'byte2_unused_4', 'byte2_unused_5', 'byte2_unused_6',
                                                 'Diablos-missed', 'Always obtains card']
     SECTION_INFO_STAT_BYTE_FLAG_3 = {'offset': 0xFF, 'size': 1, 'byteorder': 'little', 'name': 'byte_flag_3', 'pretty_name': 'Byte Flag 3'}
-    SECTION_INFO_STAT_BYTE_FLAG_3_LIST_VALUE = ['byte3_zz1', 'byte3_zz2', 'byte3_zz3', 'byte3_zz4', 'byte3_unused_5', 'byte3_unused_6', 'byte3_unused_7', 'byte3_unused_8']
+    SECTION_INFO_STAT_BYTE_FLAG_3_LIST_VALUE = ['byte3_zz1', 'byte3_zz2', 'byte3_zz3', 'byte3_zz4', 'byte3_unused_5', 'byte3_unused_6', 'byte3_unused_7',
+                                                'byte3_unused_8']
     ABILITIES_LOW_DATA = {'offset': 0x34, 'size': 64, 'byteorder': 'little', 'name': 'abilities_low', 'pretty_name': 'Abilities Low Level'}
     ABILITIES_MED_DATA = {'offset': 0x74, 'size': 64, 'byteorder': 'little', 'name': 'abilities_med', 'pretty_name': 'Abilities Medium Level'}
     ABILITIES_HIGH_DATA = {'offset': 0xB4, 'size': 64, 'byteorder': 'little', 'name': 'abilities_high', 'pretty_name': 'Abilities High Level'}
     SECTION_INFO_STAT_DICT = {'monster_name': "", 'hp': [], 'str': [], 'vit': [], 'mag': [], 'spr': [], 'spd': [], 'eva': [],
                               'med_lvl': 0, 'high_lvl': 0, 'extra_xp': 0, 'xp': 0, 'low_lvl_mag': 0, 'med_lvl_mag': 0, 'high_lvl_mag': 0, 'low_lvl_mug': 0,
                               'med_lvl_mug': 0, 'high_lvl_mug': 0, 'low_lvl_drop': 0, 'med_lvl_drop': 0, 'high_lvl_drop': 0, 'mug_rate': 0, 'drop_rate': 0,
-                              'ap': 0, 'elem_def': 0, 'status_def': 0, 'card': 0, 'devour': 0, 'abilities_low': 0, 'abilities_med': 0, 'abilities_high': 0, 'renzokuken':[]}
+                              'ap': 0, 'elem_def': 0, 'status_def': 0, 'card': 0, 'devour': 0, 'abilities_low': 0, 'abilities_med': 0, 'abilities_high': 0,
+                              'renzokuken': []}
     SECTION_INFO_STAT_LIST_DATA = [SECTION_INFO_STAT_NAME_DATA, HP_DATA, STR_DATA, VIT_DATA, MAG_DATA, SPR_DATA, SPD_DATA, EVA_DATA, MED_LVL_DATA,
                                    HIGH_LVL_DATA, EXTRA_XP_DATA, XP_DATA, LOW_LVL_MAG_DATA,
                                    MED_LVL_MAG_DATA, HIGH_LVL_MAG_DATA, LOW_LVL_MUG_DATA, MED_LVL_MUG_DATA,
                                    HIGH_LVL_MUG_DATA, LOW_LVL_DROP_DATA, MED_LVL_DROP_DATA, HIGH_LVL_DROP_DATA, MUG_RATE_DATA, DROP_RATE_DATA, AP_DATA,
                                    ELEM_DEF_DATA,
                                    STATUS_DEF_DATA, CARD_DATA, DEVOUR_DATA, ABILITIES_LOW_DATA, ABILITIES_MED_DATA, ABILITIES_HIGH_DATA,
-                                   SECTION_INFO_STAT_BYTE_FLAG_0, SECTION_INFO_STAT_BYTE_FLAG_1, SECTION_INFO_STAT_BYTE_FLAG_2, SECTION_INFO_STAT_BYTE_FLAG_3, SECTION_INFO_STAT_RENZOKUKEN]
+                                   SECTION_INFO_STAT_BYTE_FLAG_0, SECTION_INFO_STAT_BYTE_FLAG_1, SECTION_INFO_STAT_BYTE_FLAG_2, SECTION_INFO_STAT_BYTE_FLAG_3,
+                                   SECTION_INFO_STAT_RENZOKUKEN]
     # Battle script section
     # Subsection header
     SECTION_BATTLE_SCRIPT_HEADER_NB_SUB = {'offset': 0x00, 'size': 4, 'byteorder': 'little', 'name': 'battle_nb_sub', 'pretty_name': 'Number sub-section'}
@@ -80,6 +84,19 @@ class GameData():
     SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB = {'offset': 0x0C, 'size': 4, 'byteorder': 'little', 'name': 'offset_text_sub',
                                                     'pretty_name': 'Offset to text sub-section'}
 
+    # Subsection AI
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_INIT_CODE = {'offset': 0x00, 'size': 4, 'byteorder': 'little', 'name': 'offset_init_code',
+                                                 'pretty_name': 'Offset init code'}
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_ENNEMY_TURN = {'offset': 0x04, 'size': 4, 'byteorder': 'little', 'name': 'offset_ennemy_turn',
+                                                   'pretty_name': 'Offset ennemy turn'}
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_COUNTERATTACK = {'offset': 0x08, 'size': 4, 'byteorder': 'little', 'name': 'offset_counterattack',
+                                                     'pretty_name': 'Offset counterattack'}
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_DEATH = {'offset': 0x0C, 'size': 4, 'byteorder': 'little', 'name': 'offset_death', 'pretty_name': 'Offset death'}
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_BEFORE_DYING_OR_HIT = {'offset': 0x10, 'size': 4, 'byteorder': 'little', 'name': 'offset_before_dying_or_hit',
+                                                           'pretty_name': 'Offset before dying or getting hit'}
+    SECTION_BATTLE_SCRIPT_AI_OFFSET_LIST_DATA = [SECTION_BATTLE_SCRIPT_AI_OFFSET_INIT_CODE, SECTION_BATTLE_SCRIPT_AI_OFFSET_ENNEMY_TURN,
+                                                 SECTION_BATTLE_SCRIPT_AI_OFFSET_COUNTERATTACK, SECTION_BATTLE_SCRIPT_AI_OFFSET_DEATH,
+                                                 SECTION_BATTLE_SCRIPT_AI_OFFSET_BEFORE_DYING_OR_HIT]
     # Subsection Offset to text offset
     SECTION_BATTLE_SCRIPT_TEXT_OFFSET = {'offset': 0x00, 'size': 2, 'byteorder': 'little', 'name': 'text_offset', 'pretty_name': 'List of text offset'}
     # Subsection battle text
@@ -87,9 +104,11 @@ class GameData():
     SECTION_BATTLE_SCRIPT_DICT = {'battle_nb_sub': 0, 'offset_ai_sub': 0, 'offset_text_offset': 0, 'offset_text_sub': 0, 'text_offset': [], 'battle_text': []}
     SECTION_BATTLE_SCRIPT_LIST_DATA = [SECTION_BATTLE_SCRIPT_HEADER_NB_SUB, SECTION_BATTLE_SCRIPT_HEADER_OFFSET_AI_SUB,
                                        SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB, SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB,
-                                       SECTION_BATTLE_SCRIPT_TEXT_OFFSET, SECTION_BATTLE_SCRIPT_BATTLE_TEXT]
+                                       SECTION_BATTLE_SCRIPT_TEXT_OFFSET, SECTION_BATTLE_SCRIPT_BATTLE_TEXT, SECTION_BATTLE_SCRIPT_AI_OFFSET_INIT_CODE,
+                                       SECTION_BATTLE_SCRIPT_AI_OFFSET_ENNEMY_TURN, SECTION_BATTLE_SCRIPT_AI_OFFSET_COUNTERATTACK,
+                                       SECTION_BATTLE_SCRIPT_AI_OFFSET_DEATH, SECTION_BATTLE_SCRIPT_AI_OFFSET_BEFORE_DYING_OR_HIT]
 
-    BYTE_FLAG_LIST = ['byte_flag_0','byte_flag_1', 'byte_flag_2', 'byte_flag_3']
+    BYTE_FLAG_LIST = ['byte_flag_0', 'byte_flag_1', 'byte_flag_2', 'byte_flag_3']
     CARD_OBTAIN_ORDER = ['DROP', 'MOD', 'RARE_MOD']
     MISC_ORDER = ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'mug_rate', 'drop_rate', 'ap']
     ABILITIES_HIGHNESS_ORDER = ['abilities_low', 'abilities_med', 'abilities_high']
@@ -113,6 +132,8 @@ class GameData():
         self.magic_values = {}
         self.item_values = {}
         self.status_values = []
+        self.status_ia_values = {}
+        self.gforce_values = []
         self.magic_type_values = []
         self.stat_values = []
         self.ennemy_abilities_values = {}
@@ -120,6 +141,7 @@ class GameData():
         self.translate_hex_to_str_table = []
         self.game_info_test = {}
         self.special_action = {}
+        self.monster_values = {}
         self.__init_hex_to_str_table()
 
     def __init_hex_to_str_table(self):
@@ -315,6 +337,18 @@ class GameData():
         self.load_ennemy_abilities_data(os.path.join(self.RESOURCE_FOLDER, "ennemy_abilities.txt"))
         self.load_ennemy_abilities_type_data(os.path.join(self.RESOURCE_FOLDER, "ennemy_abilities_type.txt"))
         self.load_special_action_data(os.path.join(self.RESOURCE_FOLDER, "special_action.txt"))
+        self.load_monster_data(os.path.join(self.RESOURCE_FOLDER, "monster.txt"))
+        self.load_status_ia_data(os.path.join(self.RESOURCE_FOLDER, "status_ia.txt"))
+        self.load_gforce_data(os.path.join(self.RESOURCE_FOLDER, "gforce.txt"))
+        self.unknown_result = []
+
+    def load_status_ia_data(self, file):
+        with (open(file, "r") as f):
+            file_split = f.read().split('\n')
+            for el_split in file_split:
+                split_line = el_split.split('>')
+                self.status_ia_values[int(split_line[0], 10)] = {'name': split_line[1],
+                                                                 'ref': str(int(split_line[0], 10)) + ":" + split_line[1]}
 
     def load_special_action_data(self, file):
         with (open(file, "r") as f):
@@ -322,14 +356,15 @@ class GameData():
             for el_split in file_split:
                 split_line = el_split.split('>')
                 self.special_action[int(split_line[0], 10)] = {'name': split_line[1],
-                                                                       'ref': str(int(split_line[0], 10)) + ":" + split_line[1]}
+                                                               'ref': str(int(split_line[0], 10)) + ":" + split_line[1]}
+
     def load_devour_data(self, file):
         with (open(file, "r") as f):
             file_split = f.read().split('\n')
             for el_split in file_split:
                 split_line = el_split.split('<')
                 self.devour_values[int(split_line[0], 16)] = {'name': split_line[1],
-                                                                       'ref': str(int(split_line[0], 16)) + ":" + split_line[1]}
+                                                              'ref': str(int(split_line[0], 16)) + ":" + split_line[1]}
 
     def load_card_data(self, file):
         with (open(file, "r") as f):
@@ -359,6 +394,10 @@ class GameData():
         with (open(file, "r") as f):
             self.status_values = f.read().split('\n')
 
+    def load_gforce_data(self, file):
+        with (open(file, "r") as f):
+            self.gforce_values = f.read().split('\n')
+
     def load_magic_type_data(self, file):
         with (open(file, "r") as f):
             self.magic_type_values = f.read().split('\n')
@@ -366,6 +405,10 @@ class GameData():
     def load_stat_data(self, file):
         with (open(file, "r") as f):
             self.stat_values = f.read().split('\n')
+
+    def load_monster_data(self, file):
+        with (open(file, "r", encoding='utf8') as f):
+            self.monster_values = f.read().split('\n')
 
     def load_ennemy_abilities_data(self, file):
         with (open(file, "r") as f):

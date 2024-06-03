@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+import re
 import shutil
 import sys
 
@@ -145,13 +146,15 @@ class IfritManager():
         print("Reading ennemy files")
         for monster_file in file_list:
             file_name = os.path.basename(monster_file)
+            file_index = int(re.search(r'\d{3}', file_name).group())
+            if file_index == 127 or file_index > 143:# Avoid working on garbage file
+                continue
             monster[file_name] = Ennemy(game_data)
             monster[file_name].load_file_data(monster_file, game_data)
 
         print("Analysing ennemy files")
-        for monster_file in file_list:
-            file_name = os.path.basename(monster_file)
-            monster[file_name].analyse_loaded_data(game_data)
+        for monster_value in monster.values():
+            monster_value.analyse_loaded_data(game_data)
 
         print("Creating checksum file")
         self.create_checksum_file(monster, "checksum_origin_file.txt")
