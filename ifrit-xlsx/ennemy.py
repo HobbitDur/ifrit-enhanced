@@ -1,6 +1,7 @@
 import copy
 import glob
 import os
+import re
 import shutil
 from math import floor
 
@@ -24,7 +25,7 @@ class Ennemy():
         self.model_animation_data = copy.deepcopy(game_data.SECTION_MODEL_ANIM_DICT)
         self.info_stat_data = copy.deepcopy(game_data.SECTION_INFO_STAT_DICT)
         self.battle_script_data = copy.deepcopy(game_data.SECTION_BATTLE_SCRIPT_DICT)
-        self.list_var = [{'op_code': 20, 'var_name': 'Inconnu20'},
+        self.list_var = [{'op_code': 20, 'var_name': 'Unknown20'},
                          {'op_code': 81, 'var_name': 'TomberryDefeated'},
                          {'op_code': 82, 'var_name': 'TomberrySrIsDefeated'},
                          {'op_code': 83, 'var_name': 'UfoIsDefeated'},
@@ -36,6 +37,61 @@ class Ennemy():
         self.was_magic = False
         self.was_item = False
         self.was_gforce = False
+        self.list_op_code = [{'op_code': 0x00, 'size': 0, 'func': self.__op_00_analysis},  # Stop
+                             {'op_code': 0x01, 'size': 1, 'func': self.__op_01_analysis},  # Show battle text
+                             {'op_code': 0x02, 'size': 7, 'func': self.__op_02_analysis},  # IF condition
+                             {'op_code': 0x04, 'size': 1, 'func': self.__op_04_analysis},  # Target
+                             {'op_code': 0x05, 'size': 3, 'func': self.__op_05_analysis},  # Unknown
+                             {'op_code': 0x08, 'size': 0, 'func': self.__op_08_analysis},  # End combat
+                             {'op_code': 0x09, 'size': 1, 'func': self.__op_09_analysis},  # Change animation
+                             {'op_code': 0x0B, 'size': 3, 'func': self.__op_0B_analysis},  # Random attack
+                             {'op_code': 0x0C, 'size': 1, 'func': self.__op_0C_analysis},  # Attack/animation
+                             {'op_code': 0x0E, 'size': 2, 'func': self.__op_0E_analysis},  # Set var
+                             {'op_code': 0x0F, 'size': 2, 'func': self.__op_0F_analysis},  # Set var globally
+                             {'op_code': 0x11, 'size': 2, 'func': self.__op_11_analysis},  # Set var map
+                             {'op_code': 0x12, 'size': 2, 'func': self.__op_12_analysis},  # Add var
+                             {'op_code': 0x13, 'size': 2, 'func': self.__op_13_analysis},  # Add var global
+                             {'op_code': 0x15, 'size': 2, 'func': self.__op_15_analysis},  # ADD var savemap
+                             {'op_code': 0x16, 'size': 0, 'func': self.__op_16_analysis},  # FUll hp
+                             {'op_code': 0x17, 'size': 1, 'func': self.__op_17_analysis},  # Deactivate RUn away
+                             {'op_code': 0x18, 'size': 1, 'func': self.__op_18_analysis},  # Show battle text with debug ?
+                             {'op_code': 0x19, 'size': 3, 'func': self.__op_19_analysis},  # Unknown
+                             {'op_code': 0x1A, 'size': 1, 'func': self.__op_1A_analysis},  # Show battle text + lock
+                             {'op_code': 0x1B, 'size': 0, 'func': self.__op_1B_analysis},  # Unknown (biggs 1)
+                             {'op_code': 0x1C, 'size': 1, 'func': self.__op_1C_analysis},  # Wait text
+                             {'op_code': 0x1D, 'size': 1, 'func': self.__op_1D_analysis},  # Leave ennemy
+                             {'op_code': 0x1E, 'size': 1, 'func': self.__op_1E_analysis},  # Launch special action
+                             {'op_code': 0x1F, 'size': 1, 'func': self.__op_1F_analysis},  # Enter ennemy
+                             {'op_code': 0x20, 'size': 0, 'func': self.__op_20_analysis},  # Unknown Goliath (unused ?)
+                             {'op_code': 0x23, 'size': 2, 'func': self.__op_23_analysis},  # Else/Endif
+                             {'op_code': 0x24, 'size': 0, 'func': self.__op_24_analysis},  # Fill ATB bar
+                             {'op_code': 0x25, 'size': 1, 'func': self.__op_25_analysis},  # Add Scan
+                             {'op_code': 0x26, 'size': 4, 'func': self.__op_26_analysis},  # Target with status
+                             {'op_code': 0x27, 'size': 2, 'func': self.__op_27_analysis},  # Flag set capacity
+                             {'op_code': 0x28, 'size': 2, 'func': self.__op_28_analysis},  # Change stat
+                             {'op_code': 0x29, 'size': 0, 'func': self.__op_29_analysis},  # Unknown (gangrene) (Size 1 or 0 ?) followed by 2A
+                             {'op_code': 0x2A, 'size': 0, 'func': self.__op_2A_analysis},  # Unknown (gangrene)
+                             {'op_code': 0x2B, 'size': 2, 'func': self.__op_2B_analysis},  # Unknown ultimecia 124
+                             {'op_code': 0x2C, 'size': 0, 'func': self.__op_2C_analysis},  # Unknown seifer
+                             {'op_code': 0x2D, 'size': 3, 'func': self.__op_2D_analysis},  # Change elemental value
+                             {'op_code': 0x2E, 'size': 0, 'func': self.__op_2E_analysis},  # Cronos
+                             {'op_code': 0x30, 'size': 0, 'func': self.__op_30_analysis},  # DEACTIVATE AS TARGET (gangrene)
+                             {'op_code': 0x31, 'size': 1, 'func': self.__op_31_analysis},  # Give gforce (tomberrry)
+                             {'op_code': 0x32, 'size': 0, 'func': self.__op_32_analysis},  # Unknown (shiva)
+                             {'op_code': 0x33, 'size': 0, 'func': self.__op_33_analysis},  # Activate target
+                             {'op_code': 0x34, 'size': 1, 'func': self.__op_34_analysis},  # Unknown (shiva)
+                             {'op_code': 0x35, 'size': 1, 'func': self.__op_35_analysis},  # Activate ennemy as target
+                             {'op_code': 0x36, 'size': 0, 'func': self.__op_36_analysis},  # Seifer 4
+                             {'op_code': 0x37, 'size': 1, 'func': self.__op_37_analysis},  # Give card
+                             {'op_code': 0x38, 'size': 1, 'func': self.__op_38_analysis},  # Give object
+                             {'op_code': 0x39, 'size': 0, 'func': self.__op_39_analysis},  # Game over
+                             {'op_code': 0x3A, 'size': 1, 'func': self.__op_3A_analysis},  # Unknow seifer
+                             {'op_code': 0x3B, 'size': 2, 'func': self.__op_3B_analysis},  # Unknown (ultimecia 124)
+                             {'op_code': 0x3C, 'size': 0, 'func': self.__op_3C_analysis},  # Unknown
+                             {'op_code': 0x3D, 'size': 0, 'func': self.__op_3D_analysis},  # Unknown Minotaure
+                             {'op_code': 0x41, 'size': 0, 'func': self.__op_41_analysis},  # Unknown goliath (unused ?)
+                             ]
+        self.list_comparator = ['⩵', '<', '>', '≠', '≤', '≥']
 
     def __str__(self):
         return "Name: {} \nData:{}".format(self.info_stat_data['monster_name'],
@@ -49,7 +105,7 @@ class Ennemy():
         self.origin_file_name = os.path.basename(file)
         self.origin_file_checksum = get_checksum(file, algorithm='SHA256')
 
-    def analyse_loaded_data(self, game_data):
+    def analyse_loaded_data(self, game_data, analyse_ia):
         """This is the main function. Here we have several cases.
         So first the based stat. As there is 4 stats for each in order to compute the final stat, they are stored in a list of size 4.
         For card, this is the ID for the different case: DROP, MOD, RARE_MOD
@@ -62,9 +118,9 @@ class Ennemy():
 
         self.__analyze_animation_section(game_data)
         self.__analyze_info_stat(game_data)
-        self.__analyze_battle_script_section(game_data)
+        self.__analyze_battle_script_section(game_data, analyse_ia)
 
-    def write_data_to_file(self, game_data, path):
+    def write_data_to_file(self, game_data, path, write_ia = True):
         # First copy original file
         full_dest_path = os.path.join(path, self.origin_file_name)
         # Then load file (python make it difficult to directly modify files)
@@ -78,7 +134,7 @@ class Ennemy():
             if index_data == 2:
                 section_position = 8
             for param_name, value in data.items():
-                if param_name !='battle_text' and 'ia_data' != param_name:  # Combat txt handled differently
+                if param_name != 'battle_text' and 'ia_data' != param_name:  # Combat txt handled differently
                     property_elem = [x for ind, x in enumerate(
                         game_data.SECTION_INFO_STAT_LIST_DATA + game_data.SECTION_BATTLE_SCRIPT_LIST_DATA + game_data.SECTION_MODEL_ANIM_LIST_DATA) if
                                      x['name'] == param_name][0]
@@ -113,15 +169,6 @@ class Ennemy():
                         value_to_set.extend(el2['animation'].to_bytes())
                         value_to_set.extend(el2['id'].to_bytes(2, property_elem['byteorder']))
                     value_to_set = bytes(value_to_set)
-                elif param_name == 'battle_text':  # Special case for text as the value change for each text
-                    if value:
-                        value_battle = bytearray()
-                        for str_battle in value:
-                            value_battle.extend(game_data.translate_str_to_hex(str_battle))
-                            value_battle.extend([0])
-                        self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_sub']:
-                                           self.header_data['section_pos'][8] + self.battle_script_data['offset_text_sub'] + len(value_battle)] = value_battle
-                    continue
                 elif param_name in ['monster_name']:
                     value_to_set = game_data.translate_str_to_hex(value)
                     # Completing the 0 after the name
@@ -131,6 +178,72 @@ class Ennemy():
                     value_to_set = bytearray()
                     for i in range(len(value)):
                         value_to_set.extend(value[i].to_bytes(2, game_data.SECTION_INFO_STAT_RENZOKUKEN['byteorder']))
+                elif param_name == 'battle_text':  # Special case for text as the value change for each text
+                    if value:
+                        value_battle = bytearray()
+                        for str_battle in value:
+                            value_battle.extend(game_data.translate_str_to_hex(str_battle))
+                            value_battle.extend([0])
+                        self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_sub']:
+                                           self.header_data['section_pos'][8] + self.battle_script_data['offset_text_sub'] + len(value_battle)] = value_battle
+                    continue  # Not setting the file_raw_data loop
+                elif param_name == 'ia_data' and write_ia:
+                    print("Writing IA info of {} file".format(self.info_stat_data['monster_name']))
+                    index_list_offset = 0
+                    list_offset = [self.battle_script_data['offset_init_code'], self.battle_script_data['offset_ennemy_turn'],
+                                   self.battle_script_data['offset_counterattack'], self.battle_script_data['offset_death'],
+                                   self.battle_script_data['offset_before_dying_or_hit']]
+                    ai_offset = self.header_data['section_pos'][section_position] + self.battle_script_data['offset_ai_sub']
+                    offset_code = list_offset[index_list_offset]
+                    offset_command = 0
+                    index_count = 0
+                    for command in value:
+                        #print(command)
+                        if command['id'] == -1:  # Separator
+                            index_list_offset += 1
+                            offset_code = list_offset[index_list_offset]
+                            offset_command=0
+                            continue
+                        command_ref = [x for x in self.list_op_code if x['op_code'] == command['id']][0]
+                        start_data = ai_offset + offset_code + offset_command
+                        end_data = ai_offset + offset_code + offset_command + command_ref['size'] + 1  # +1 for taking into account the id we are writting
+                        index_count += command_ref['size'] + 1
+                        if command['id'] == 0x02:  # IF
+                            comparator = self.list_comparator.index(command['comparator'])
+                            jump = command['jump']
+                            value_to_set = [command['id'], command['subject_id'], command['left_param'],
+                                            comparator, command['right_param'], command['debug'], *jump]
+                        elif command['id'] in [0x0E, 0x0F, 0x11, 0x12, 0x13, 0x15]:  # Modify var
+                            if command['param'][-1] == '[global]':
+                                if command['id'] in [0x0E, 0x0F, 0x11]:
+                                    futur_command_id = 0x0F
+                                elif command['id'] in [0x12, 0x13, 0x15]:
+                                    futur_command_id = 0x13
+                            elif command['param'][-1] == '[savemap]':
+                                if command['id'] in [0x0E, 0x0F, 0x11]:
+                                    futur_command_id = 0x11
+                                elif command['id'] in [0x12, 0x13, 0x15]:
+                                    futur_command_id = 0x15
+                            else:
+                                if command['id'] in [0x0E, 0x0F, 0x11]:
+                                    futur_command_id = 0x0E
+                                elif command['id'] in [0x12, 0x13, 0x15]:
+                                    futur_command_id = 0x12
+                            var_ref = [x for x in self.list_var if x['var_name'] == command['param'][0]]
+                            if var_ref:
+                                var_id = var_ref[0]['op_code']
+                            else:
+                                var_id = int(command['param'][0])
+                            var_set = command['param'][1]
+                            value_to_set = [futur_command_id, var_id, var_set]
+                        elif command['id'] == 0x1A:  # LOCK PARAM TO REMOVE
+                            value_to_set = [command['id'], command['param'][0]]
+                        else:
+                            value_to_set = [command['id'], *command['param']]
+                        offset_command += command_ref['size'] + 1
+                        self.file_raw_data[start_data:end_data] = bytes(value_to_set)
+                    continue  # Not setting the file_raw_data loop
+
                 else:  # Data that we don't modify in the excel
                     continue
                 if value_to_set:
@@ -173,8 +286,6 @@ class Ennemy():
 
     def __analyze_info_stat(self, game_data):
         SECTION_NUMBER = 7
-        print("SECTION POS")
-        print(self.header_data['section_pos'])
         for el in game_data.SECTION_INFO_STAT_LIST_DATA:
             raw_data_selected = self.__get_raw_value_from_info(el, SECTION_NUMBER)
             data_size = len(raw_data_selected)
@@ -250,7 +361,7 @@ class Ennemy():
                 if '\\n{NewPage}\\n{x0c00}/${x1000}{x0900}{x0c02}' not in self.info_stat_data['monster_name']:
                     game_data.game_info_test['list_monster'].append(self.info_stat_data['monster_name'])
 
-    def __analyze_battle_script_section(self, game_data):
+    def __analyze_battle_script_section(self, game_data, analyse_ia):
         SECTION_NUMBER = 8
         if len(self.header_data['section_pos']) <= SECTION_NUMBER:
             return
@@ -291,177 +402,106 @@ class Ennemy():
             else:
                 self.battle_script_data['battle_text'] = []
 
-        print("TESTING AI")
-        print(section_offset)
-        print(self.battle_script_data['offset_ai_sub'])
-        # Reading AI subsection
+        if analyse_ia:
+            print("Analysing IA from loaded file")
+            # Reading AI subsection
 
-        ## Reading offset
-        ai_offset = section_offset + self.battle_script_data['offset_ai_sub']
-        for offset_param in game_data.SECTION_BATTLE_SCRIPT_AI_OFFSET_LIST_DATA:
-            start_data = ai_offset + offset_param['offset']
-            end_data = ai_offset + offset_param['offset'] + offset_param['size']
-            self.battle_script_data[offset_param['name']] = int.from_bytes(self.file_raw_data[start_data:end_data], offset_param['byteorder'])
+            ## Reading offset
+            ai_offset = section_offset + self.battle_script_data['offset_ai_sub']
+            for offset_param in game_data.SECTION_BATTLE_SCRIPT_AI_OFFSET_LIST_DATA:
+                start_data = ai_offset + offset_param['offset']
+                end_data = ai_offset + offset_param['offset'] + offset_param['size']
+                self.battle_script_data[offset_param['name']] = int.from_bytes(self.file_raw_data[start_data:end_data], offset_param['byteorder'])
 
-        print(self.battle_script_data)
-        start_data = ai_offset + self.battle_script_data['offset_init_code']
-        end_data = ai_offset + self.battle_script_data['offset_ennemy_turn']
-        init_code = list(self.file_raw_data[start_data:end_data])
-        start_data = ai_offset + self.battle_script_data['offset_ennemy_turn']
-        end_data = ai_offset + self.battle_script_data['offset_counterattack']
-        ennemy_turn_code = list(self.file_raw_data[start_data:end_data])
-        start_data = ai_offset + self.battle_script_data['offset_counterattack']
-        end_data = ai_offset + self.battle_script_data['offset_death']
-        counterattack_code = list(self.file_raw_data[start_data:end_data])
-        start_data = ai_offset + self.battle_script_data['offset_death']
-        end_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
-        death_code = list(self.file_raw_data[start_data:end_data])
-        start_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
-        end_data = ai_offset + self.battle_script_data['offset_text_offset']
-        before_dying_or_hit_code = list(self.file_raw_data[start_data:end_data])
+            start_data = ai_offset + self.battle_script_data['offset_init_code']
+            end_data = ai_offset + self.battle_script_data['offset_ennemy_turn']
+            init_code = list(self.file_raw_data[start_data:end_data])
+            start_data = ai_offset + self.battle_script_data['offset_ennemy_turn']
+            end_data = ai_offset + self.battle_script_data['offset_counterattack']
+            ennemy_turn_code = list(self.file_raw_data[start_data:end_data])
+            start_data = ai_offset + self.battle_script_data['offset_counterattack']
+            end_data = ai_offset + self.battle_script_data['offset_death']
+            counterattack_code = list(self.file_raw_data[start_data:end_data])
+            start_data = ai_offset + self.battle_script_data['offset_death']
+            end_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
+            death_code = list(self.file_raw_data[start_data:end_data])
+            start_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
+            end_data = ai_offset + self.battle_script_data['offset_text_offset']
+            before_dying_or_hit_code = list(self.file_raw_data[start_data:end_data])
 
-        list_code = [init_code, ennemy_turn_code, counterattack_code, death_code, before_dying_or_hit_code]
+            list_code = [init_code, ennemy_turn_code, counterattack_code, death_code, before_dying_or_hit_code]
 
-        list_op_code = [{'op_code': 0x00, 'size': 0, 'func': self.__op_00_analysis},  # Stop
-                        {'op_code': 0x01, 'size': 1, 'func': self.__op_01_analysis},  # Show battle text
-                        {'op_code': 0x02, 'size': 7, 'func': self.__op_02_analysis},  # IF condition
-                        {'op_code': 0x04, 'size': 1, 'func': self.__op_04_analysis},  # Target
-                        {'op_code': 0x05, 'size': 3, 'func': self.__op_05_analysis},  # Unknown
-                        {'op_code': 0x08, 'size': 0, 'func': self.__op_08_analysis},  # End combat
-                        {'op_code': 0x09, 'size': 1, 'func': self.__op_09_analysis},  # Change animation
-                        {'op_code': 0x0B, 'size': 3, 'func': self.__op_0B_analysis},  # Random attack
-                        {'op_code': 0x0C, 'size': 1, 'func': self.__op_0C_analysis},  # Attack/animation
-                        {'op_code': 0x0E, 'size': 2, 'func': self.__op_0E_analysis},  # Set var
-                        {'op_code': 0x0F, 'size': 2, 'func': self.__op_0F_analysis},  # Set var globally
-                        {'op_code': 0x11, 'size': 2, 'func': self.__op_11_analysis},  # Set var map
-                        {'op_code': 0x12, 'size': 2, 'func': self.__op_12_analysis},  # Add var
-                        {'op_code': 0x13, 'size': 2, 'func': self.__op_13_analysis},  # Add var global
-                        {'op_code': 0x15, 'size': 2, 'func': self.__op_15_analysis},  # ADD var savemap
-                        {'op_code': 0x16, 'size': 0, 'func': self.__op_16_analysis},  # FUll hp
-                        {'op_code': 0x17, 'size': 1, 'func': self.__op_17_analysis},  # Deactivate RUn away
-                        {'op_code': 0x18, 'size': 1, 'func': self.__op_18_analysis},  # Show battle text with debug ?
-                        {'op_code': 0x19, 'size': 3, 'func': self.__op_19_analysis},  # Unknown
-                        {'op_code': 0x1A, 'size': 1, 'func': self.__op_1A_analysis},  # Show battle text + lock
-                        {'op_code': 0x1B, 'size': 0, 'func': self.__op_1B_analysis},  # Unknown (biggs 1)
-                        {'op_code': 0x1C, 'size': 1, 'func': self.__op_1C_analysis},  # Wait text
-                        {'op_code': 0x1D, 'size': 1, 'func': self.__op_1D_analysis},  # Leave ennemy
-                        {'op_code': 0x1E, 'size': 1, 'func': self.__op_1E_analysis},  # Launch special action
-                        {'op_code': 0x1F, 'size': 1, 'func': self.__op_1F_analysis},  # Enter ennemy
-                        {'op_code': 0x20, 'size': 0, 'func': self.__op_20_analysis},  # Unknown Goliath (unused ?)
-                        {'op_code': 0x23, 'size': 2, 'func': self.__op_23_analysis},  # Else/Endif
-                        {'op_code': 0x24, 'size': 0, 'func': self.__op_24_analysis},  # Fill ATB bar
-                        {'op_code': 0x25, 'size': 1, 'func': self.__op_25_analysis},  # Add Scan
-                        {'op_code': 0x26, 'size': 4, 'func': self.__op_26_analysis},  # Target with status
-                        {'op_code': 0x27, 'size': 2, 'func': self.__op_27_analysis},  # Flag set capacity
-                        {'op_code': 0x28, 'size': 2, 'func': self.__op_28_analysis},  # Change stat
-                        {'op_code': 0x29, 'size': 2, 'func': self.__op_29_analysis},  # Unknown (gangrene)
-                        {'op_code': 0x2B, 'size': 2, 'func': self.__op_2B_analysis},  # Unknown ultimecia 124
-                        {'op_code': 0x2C, 'size': 0, 'func': self.__op_2C_analysis},  # Unknown seifer
-                        {'op_code': 0x2D, 'size': 3, 'func': self.__op_2D_analysis},  # Change elemental value
-                        {'op_code': 0x2E, 'size': 0, 'func': self.__op_2E_analysis},  # Cronos
-                        {'op_code': 0x30, 'size': 0, 'func': self.__op_30_analysis},  # DEACTIVATE AS TARGET (gangrene)
-                        {'op_code': 0x31, 'size': 1, 'func': self.__op_31_analysis},  # Give gforce (tomberrry)
-                        {'op_code': 0x32, 'size': 0, 'func': self.__op_32_analysis},  # Unknown (shiva)
-                        {'op_code': 0x33, 'size': 0, 'func': self.__op_33_analysis},  # Activate target
-                        {'op_code': 0x34, 'size': 1, 'func': self.__op_34_analysis},  # Unknown (shiva)
-                        {'op_code': 0x35, 'size': 1, 'func': self.__op_35_analysis},  # Activate ennemy as target
-                        {'op_code': 0x36, 'size': 0, 'func': self.__op_36_analysis},  # Seifer 4
-                        {'op_code': 0x37, 'size': 1, 'func': self.__op_37_analysis},  # Give card
-                        {'op_code': 0x38, 'size': 1, 'func': self.__op_38_analysis},  # Give object
-                        {'op_code': 0x39, 'size': 0, 'func': self.__op_39_analysis},  # Game over
-                        {'op_code': 0x3A, 'size': 1, 'func': self.__op_3A_analysis},  # Unknow seifer
-                        {'op_code': 0x3B, 'size': 2, 'func': self.__op_3B_analysis},  # Unknown (ultimecia 124)
-                        {'op_code': 0x3C, 'size': 0, 'func': self.__op_3C_analysis},  # Unknown
-                        {'op_code': 0x3D, 'size': 0, 'func': self.__op_3D_analysis},  # Unknown Minotaure
-                        {'op_code': 0x41, 'size': 0, 'func': self.__op_41_analysis},  # Unknown goliath (unused ?)
-                        ]
-        print("NAME : {}".format(self.info_stat_data['monster_name']))
-        self.battle_script_data['ia_data'] = []
-        for code in list_code:
-            print(code)
-            last_index_0 = 0
-            list_bracket = [0] * 10
-            last_stop = False
-            # For print
-            code_hex = []
-            for item in code:
-                code_hex.append(hex(item))
-            print(code_hex)
-            # End for print
+            self.battle_script_data['ia_data'] = []
+            for code in list_code:
+                last_index_0 = 0
+                list_bracket = [0] * 10
+                last_stop = False
+                # For print
+                code_hex = []
+                for item in code:
+                    code_hex.append(hex(item))
+                # End for print
+                index_read = 0
+                list_result = []
+                while index_read < len(code):
+                    op_code_ref = [x for x in self.list_op_code if x['op_code'] == code[index_read]]
+                    if not op_code_ref and code[index_read] > 0x40:
+                        index_read += 1
+                        continue
+                    elif op_code_ref:  # >0x40 not used
+                        op_code_ref = op_code_ref[0]
+                        start_code = index_read + 1
+                        end_code = index_read + 1 + op_code_ref['size']
+                        #print(op_code_ref['func'].__name__)
+                        #print("Code: {}".format(code[start_code:end_code]))
+                        #print("Index read: {}".format(index_read))
+                        result = op_code_ref['func'](code[start_code:end_code], game_data)
+                        result['id'] = op_code_ref['op_code']
+                        list_result.append(result)
+                        index_read += 1 + op_code_ref['size']
 
-            index_read = 0
-            list_result = []
-            while index_read < len(code):
-
-                op_code_ref = [x for x in list_op_code if x['op_code'] == code[index_read]]
-                if not op_code_ref and code[index_read] > 0x40:
-                    index_read += 1
-                    continue
-                elif op_code_ref:  # >0x40 not used
-                    op_code_ref = op_code_ref[0]
-                    start_code = index_read + 1
-                    end_code = index_read + 1 + op_code_ref['size']
-                    print(op_code_ref['func'].__name__)
-                    print("Code: {}".format(code[start_code:end_code]))
-                    result = op_code_ref['func'](code[start_code:end_code], game_data)
-                    result['id'] = op_code_ref['op_code']
-                    list_result.append(result)
-                    index_read += 1 + op_code_ref['size']
-
-                    # Managing END
-                    ## Getting last_index that is zero
-                    for i in range(len(list_bracket)):
-                        if list_bracket[i] == 0:
-                            last_index_0 = i
-                            break
-                    ## Decreasing coutdown
-                    if last_index_0 > 0:
-                        for i in range(last_index_0):
-                            list_bracket[i] -= op_code_ref['size'] + 1
-                    if result['id'] == 0x02:  # If it's a if, add a bracket
-                        list_bracket[last_index_0] = result['param'][0]
-                    elif result['id'] == 0x23:  # IF it's a else, reinit last bracket
-                        list_bracket[last_index_0 - 1] = result['param'][0]
-                    else:  # Check if end
-                        for i in range(1, last_index_0+1):
-                            if last_index_0 > 0 and list_bracket[last_index_0 - i] == 0:
-                                ret = {'id': 0x23, 'text': 'END', 'param': [0]}
-                                list_result.append(ret)
-                                print('Adding END')
-
-                    # END Managing END
-
-                else:
-                    print("-----------------------------------NOT KNOWN--------------------------------------")
-                    result = [code[index_read]]
-                    index_read += 1
-                    game_data.unknown_result.append(self.info_stat_data['monster_name'])
-                print("Result: {}".format(result))
-
-                # Check if double stop
-                if result['id'] == 0x00 and last_stop:
-                    break
-                elif result['id'] == 0x00:
-                    last_stop = True
-                else:
-                    last_stop = False
-
-            list_result = self.__remove_stop_end(list_result)
-            print(list_result)
-            self.battle_script_data['ia_data'].append(list_result)
-        print(self.battle_script_data['ia_data'])
+                        # Managing END
+                        ## Getting last_index that is zero
+                        for i in range(len(list_bracket)):
+                            if list_bracket[i] == 0:
+                                last_index_0 = i
+                                break
+                        ## Decreasing coutdown
+                        if last_index_0 > 0:
+                            for i in range(last_index_0):
+                                list_bracket[i] -= op_code_ref['size'] + 1
+                        if result['id'] == 0x02:  # If it's a if, add a bracket
+                            list_bracket[last_index_0] = result['jump'][0]
+                        elif result['id'] == 0x23:  # IF it's a else, reinit last bracket
+                            list_bracket[last_index_0 - 1] = result['param'][0]
+                        else:  # Check if end
+                            for i in range(1, last_index_0 + 1):
+                                if last_index_0 > 0 and list_bracket[last_index_0 - i] == 0:
+                                    ret = {'id': 0x23, 'text': 'END', 'param': [0]}
+                                    list_result.append(ret)
+                        # END Managing END
+                    else:
+                        result = [code[index_read]]
+                        index_read += 1
+                        game_data.unknown_result.append(self.info_stat_data['monster_name'])
+                    # Check if double stop
+                    if result['id'] == 0x00 and last_stop:
+                        break
+                    elif result['id'] == 0x00:
+                        last_stop = True
+                    else:
+                        last_stop = False
+                list_result = self.__remove_stop_end(list_result)
+                self.battle_script_data['ia_data'].append(list_result)
 
     def __remove_stop_end(self, list_result):
         id_remove = 0
-        print("__remove_stop_end")
-        print(list_result)
         for i in range(len(list_result)):
             if list_result[i]['id'] == 0x00:  # STOP
                 if i + 1 < len(list_result):
                     if list_result[i + 1]['id'] == 0x00:
                         id_remove = i + 1
                         break
-        print(id_remove)
         return list_result[:id_remove]
 
     def __op_27_analysis(self, op_code, game_data: GameData):
@@ -520,6 +560,7 @@ class Ennemy():
 
     def __op_39_analysis(self, op_code, game_data: GameData):
         return {'text': 'GAME OVER', 'param': []}
+
     def __op_24_analysis(self, op_code, game_data: GameData):
         return {'text': 'FILL ATB BAR', 'param': []}
 
@@ -530,6 +571,9 @@ class Ennemy():
         return {'text': 'UNKNOWN ACTION', 'param': []}
 
     def __op_29_analysis(self, op_code, game_data: GameData):
+        return {'text': 'UNKNOWN ACTION', 'param': []}
+
+    def __op_2A_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
 
     def __op_1B_analysis(self, op_code, game_data: GameData):
@@ -543,6 +587,7 @@ class Ennemy():
 
     def __op_2E_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
+
     def __op_2C_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
 
@@ -554,6 +599,7 @@ class Ennemy():
 
     def __op_3C_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
+
     def __op_3D_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
 
@@ -586,7 +632,7 @@ class Ennemy():
             status = game_data.status_ia_values[op_code[3]]['name']
         else:
             status = "UNKNOWN STATUS"
-        if op_code[0] & op_code[2]:
+        if op_code[0] + op_code[2]:
             info = ''
         else:
             info = " unknown {}|{}".format(op_code[0], op_code[2])
@@ -606,7 +652,7 @@ class Ennemy():
     def __op_18_analysis(self, op_code, game_data: GameData):
         ret = self.__op_01_analysis(op_code, game_data)
         if op_code[0] != 0:
-            ret['param'].append('debug:' + str(op_code[0]))
+            ret['text']+=' debug: {}'.format(str(op_code[0]))
         return ret
 
     def __op_31_analysis(self, op_code, game_data: GameData):
@@ -665,7 +711,7 @@ class Ennemy():
             element = "UNKNOWN ELEMENT TYPE"
         element_val = op_code[1]
         op_code_unknown = op_code[2]
-        return {'text': 'Resist element {} at {}'.format(element, element_val), 'param': [element, element_val, op_code_unknown]}
+        return {'text': 'Resist element {} at {}'.format(element, element_val), 'param': [op_code[0], element_val, op_code_unknown]}
 
     def __op_0C_analysis(self, op_code, game_data):
         return {'text': 'Execute ability {}'.format(op_code[0]), 'param': [op_code[0]]}
@@ -687,7 +733,7 @@ class Ennemy():
 
     def __op_0E_analysis(self, op_code, game_data):
         return {'text': 'SET {} TO {}'.format(self.__get_var_name(op_code[0]), op_code[1]),
-                'param': [self.__get_var_name(op_code[0]), op_code[1]]}
+                'param': [op_code[0], op_code[1]]}
 
     def __op_1A_analysis(self, op_code, game_data):
         analysis = self.__op_01_analysis(op_code, game_data)
@@ -700,7 +746,7 @@ class Ennemy():
         else:
             ret = "/!\\SHOW BATTLE BUT NO BATTLE TO SHOW"
         return {'text': ret,
-                'param': []}
+                'param': [op_code[0]]}
 
     def __op_02_analysis(self, op_code, game_data: GameData):
         # op_02 = ['subject_id', 'target', 'comparator', 'value', 'debug']
@@ -709,11 +755,9 @@ class Ennemy():
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
         op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
-        print(bytearray([op_code[5], op_code[6]]))
 
-        list_comparator = ['⩵', '<', '>', '≠', '≤', '≥']
-        if op_code_comparator < len(list_comparator):
-            comparator = list_comparator[op_code_comparator]
+        if op_code_comparator < len(self.list_comparator):
+            comparator = self.list_comparator[op_code_comparator]
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
@@ -808,7 +852,7 @@ class Ennemy():
             left_subject = {'text': '{}'.format(self.__get_var_name(subject_id)), 'param': [self.__get_var_name(subject_id)]}
             right_subject = {'text': '{}'.format(op_code_value), 'param': [op_code_value]}
         return {'if_text': 'IF', 'subject_id': subject_id, 'left_subject': left_subject, 'comparator': comparator, 'right_subject': right_subject,
-                'then_text': 'THEN', 'param': [op_code_debug]}
+                'then_text': 'THEN', 'left_param': [op_code[1]], 'right_param': [op_code_value], 'jump': [op_code_debug], 'debug': op_code[4]}
 
     def __op_04_analysis(self, op_code, game_data):
         return {'text': 'TARGET {}'.format(self.__get_target(op_code[0], game_data)), 'param': [op_code[0]]}

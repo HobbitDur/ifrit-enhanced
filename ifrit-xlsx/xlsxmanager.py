@@ -1,6 +1,7 @@
 import copy
 import os
 import re
+import time
 from math import floor
 
 import xlsxwriter
@@ -68,26 +69,26 @@ INVALID_CHAR_TITLE_EXCEL_LIST = ['[', ']', ':', '*', '?', '/', '\\']
 class DatToXlsx():
 
     def __init__(self, ifrit_xlsx):
-        self.workbook = xlsxwriter.Workbook(ifrit_xlsx)#{'strings_to_numbers':True}
+        self.workbook = xlsxwriter.Workbook(ifrit_xlsx)  # {'strings_to_numbers':True}
         self.__init_style()
         self.__file_name_list = []
 
     def __init_style(self):
         self.column_title_style = self.workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b2b2b2', 'align': 'center'})
         self.border_style = self.workbook.add_format({'border': 1})
-        self.border_center_style = self.workbook.add_format({'border': 1, 'align':'center'})
+        self.border_center_style = self.workbook.add_format({'border': 1, 'align': 'center'})
         self.not_modified_style = self.workbook.add_format({'border': 1, 'bg_color': '#DA9694'})
         self.danger_style = self.workbook.add_format({'border': 1, 'bg_color': 'red'})
-        self.border_center_bold_style = self.workbook.add_format({'border': 1, 'align':'center','bold': True,})
-        self.border_center_yellow_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'yellow'})
-        self.border_center_green_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'green'})
-        self.border_center_orange_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'orange'})
-        self.border_center_pink_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'pink'})
-        self.border_center_lime_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'lime'})
-        self.border_center_blue_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'blue'})
-        self.border_center_magenta_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'magenta'})
-        self.border_center_silver_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'yellow'})
-        self.border_center_cyan_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'cyan'})
+        self.border_center_bold_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bold': True, })
+        self.border_center_yellow_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'yellow'})
+        self.border_center_green_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'green'})
+        self.border_center_orange_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'orange'})
+        self.border_center_pink_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'pink'})
+        self.border_center_lime_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'lime'})
+        self.border_center_blue_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'blue'})
+        self.border_center_magenta_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'magenta'})
+        self.border_center_silver_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'yellow'})
+        self.border_center_cyan_style = self.workbook.add_format({'border': 1, 'align': 'center', 'bg_color': 'cyan'})
         self.row_title_style = self.workbook.add_format({'border': 1, 'bold': True})
         self.magic_style = self.workbook.add_format({'border': 1, 'bg_color': '#b8cce4'})
         self.status_style = self.workbook.add_format({'border': 1, 'bg_color': '#b9b085'})
@@ -235,7 +236,7 @@ class DatToXlsx():
                                   column_index + 1,
                                   {'validate': 'list', 'source': source_str})
 
-    def export_to_xlsx(self, ennemy_list: dict, game_data):
+    def export_to_xlsx(self, ennemy_list: dict, game_data: GameData):
         # Chart
         ## Stat chart
         chart_stat = {}
@@ -243,13 +244,13 @@ class DatToXlsx():
         for key, ennemy in ennemy_list.items():
             # Tab (sheet) creation. Checking name doesn't already exist
             file_index = self.__get_file_index(ennemy)
-            if file_index == 127 or file_index > 143:  # Ignoring garbage files
+            if file_index == 0 or file_index == 127 or file_index > 143:  # Ignoring garbage files
                 continue
 
             chart_stat[ennemy] = self.workbook.add_chart({'type': 'line'})
             file_name = self.__get_tab_name(ennemy)
             worksheet = self.workbook.add_worksheet(file_name)
-            print("Write to XLSX file {}".format(file_name))
+            print("Write to XLSX sheet: {}".format(file_name))
 
             # Column position of different "menu"
             column_index = {}
@@ -335,7 +336,8 @@ class DatToXlsx():
                             worksheet.write(row_index['stat'], column_index['stat'] + 1, '=10*{}'.format(stat_cell[1]), self.not_modified_style)
                             # Impact 3
                             stat_cell[2] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 3) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}*100*{}'.format(stat_cell[2], monster_lvl_cell), self.not_modified_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}*100*{}'.format(stat_cell[2], monster_lvl_cell),
+                                            self.not_modified_style)
                             # Impact 4
                             stat_cell[3] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 4) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'] + 3, '=1000*{}'.format(stat_cell[3]), self.not_modified_style)
@@ -528,29 +530,26 @@ class DatToXlsx():
             # Legend
             worksheet.write(ROW_LEGEND, COL_LEGEND, 'Legends', self.column_title_style)
             worksheet.write(ROW_LEGEND + 1, COL_LEGEND, '', self.not_modified_style)
-            worksheet.write(ROW_LEGEND+1, COL_LEGEND+1, 'Not written back to .dat file, just for info vizualisation', self.border_style)
+            worksheet.write(ROW_LEGEND + 1, COL_LEGEND + 1, 'Not written back to .dat file, just for info vizualisation', self.border_style)
             worksheet.write(ROW_LEGEND + 2, COL_LEGEND, '', self.danger_style)
-            worksheet.write(ROW_LEGEND+2, COL_LEGEND+1, 'Modified, but risky ! Modified at your own risk', self.border_style)
+            worksheet.write(ROW_LEGEND + 2, COL_LEGEND + 1, 'Modified, but risky ! Modified at your own risk', self.border_style)
 
             # IA
-            list_title_text = ["Initialization fight", "Ennemy turn", "Counter-Attack", "Death", "Before dying or taking a hit"]
-            list_format_color=[self.border_center_yellow_style, self.border_center_green_style, self.border_center_orange_style,
-                               self.border_center_pink_style, self.border_center_lime_style, self.border_center_blue_style,  self.border_center_magenta_style,
-                               self.border_center_silver_style,self.border_center_cyan_style ]
+            list_title_text = game_data.IA_CODE_NAME_LIST
+            list_format_color = [self.border_center_yellow_style, self.border_center_green_style, self.border_center_orange_style,
+                                 self.border_center_pink_style, self.border_center_lime_style, self.border_center_blue_style, self.border_center_magenta_style,
+                                 self.border_center_silver_style, self.border_center_cyan_style]
             index_title = 0
-            col_ia_index_ref = COL_ABILITIES
+
             row_index['ia_data'] = ROW_IA
             for code_section in ennemy.battle_script_data['ia_data']:
                 worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
                                       ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 10) + str(row_index['ia_data']),
                                       list_title_text[index_title], cell_format=self.column_title_style)
                 index_title += 1
-                print("CODE SECTION")
-                print(code_section)
+                col_ia_index_ref = COL_ABILITIES
                 for ia_data in code_section:
-                    print('IA_DATA')
-                    print(ia_data)
-                    format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES)%len(list_format_color)]
+                    format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                     col_ia_index = col_ia_index_ref
                     if ia_data['id'] == 2:  # IF
                         worksheet.write(row_index['ia_data'], col_ia_index, 'IF condition', self.column_title_style)
@@ -559,36 +558,33 @@ class DatToXlsx():
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['subject_id'], self.border_center_style)
                         worksheet.write(row_index['ia_data'], col_ia_index + 2, 'Left condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index + 2, ia_data['left_subject']['text'], self.border_center_style)
-                        col_ia_index += 3
-                        for index, param in enumerate(ia_data['left_subject']['param']):
-                            worksheet.write(row_index['ia_data'], col_ia_index, 'PARAM {}'.format(index), self.column_title_style)
-                            worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
-                            col_ia_index += 1
-                        worksheet.write(row_index['ia_data'], col_ia_index, 'Comparator', self.column_title_style)
-                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['comparator'], self.border_center_style)
-                        worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Right condition', self.column_title_style)
-                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['right_subject']['text'], self.border_center_style)
-                        col_ia_index += 2
-                        for index, param in enumerate(ia_data['right_subject']['param']):
-                            worksheet.write(row_index['ia_data'], col_ia_index, 'PARAM {}'.format(index), self.column_title_style)
-                            worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
-                            col_ia_index += 1
-                        worksheet.write(row_index['ia_data'], col_ia_index, 'THEN condition', self.column_title_style)
-                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['then_text'], self.border_center_style)
-                        col_ia_index += 1
-                        for index, param in enumerate(ia_data['param']):
-                            worksheet.write(row_index['ia_data'], col_ia_index, 'PARAM {}'.format(index), self.column_title_style)
-                            worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 3, 'Comparator', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 3, ia_data['comparator'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 4, 'Right condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 4, ia_data['right_subject']['text'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 5, 'THEN condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 5, ia_data['then_text'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 6, 'Left condition param (200 = not used)', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 6, ia_data['left_param'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 7, 'Right condition param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 7, ia_data['right_param'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 8, 'Jump param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 8, ia_data['jump'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 9, 'Debug param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 9, ia_data['debug'], self.border_center_style)
                         col_ia_index_ref += 1  # One cell moving to indent
+                    elif ia_data['id'] == 0:  # STOP
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'STOP condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
                     elif ia_data['id'] == 35:  # ENDIF/ELSE
-                        col_ia_index_ref -=1
+                        col_ia_index_ref -= 1
                         col_ia_index = col_ia_index_ref
                         format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                         worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
                         col_ia_index += 1
                         for index, param in enumerate(ia_data['param']):
-                            worksheet.write(row_index['ia_data'], col_ia_index, 'PARAM {}'.format(index), self.column_title_style)
+                            worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
                             worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
                             col_ia_index += 1
                         if ia_data['text'] == 'ELSE':
@@ -604,9 +600,7 @@ class DatToXlsx():
                             worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
                             col_ia_index += 1
                     row_index['ia_data'] += 2
-                row_index['ia_data'] += 4 #Adding space between IA zone
-            #print("UNKNOW RESULT")
-            #print(game_data.unknown_result)
+                row_index['ia_data'] += 4  # Adding space between IA zone
             # Post validation
             self.__validation_post_process_all(worksheet, game_data)
 
@@ -653,27 +647,25 @@ class DatToXlsx():
             temp_dict[new_key] = temp_list.copy()
         # game_data.game_info_test['sub'] = temp_dict
 
-        print(game_data.game_info_test)
+        #print(game_data.game_info_test)
         # End monster.txt purpose
 
         self.workbook.close()
 
 
 class XlsxToDat():
-    def __init__(self):
-        pass
+    def __init__(self, xlsx_file):
+        self.workbook = load_workbook(xlsx_file, read_only=True, data_only=True, keep_links=False)
 
-    def write_to_dat(self, ennemy_list, game_data: GameData, path: str):
+    def write_to_dat(self, ennemy_list, game_data: GameData, path: str, write_ia=True):
         for key, ennemy in ennemy_list.items():
-            ennemy.write_data_to_file(game_data, path)
+            ennemy.write_data_to_file(game_data, path, write_ia)
 
-    def import_from_xlsx(self, xlsx_file, ennemy, game_data, output_path, limit_file_index=-1):
+    def import_from_xlsx(self, ennemy: [Ennemy], game_data: GameData, output_path, limit_file_index=-1, analyse_ia=True):
         """
         As the module to write is different from the reading one, the one writing start at 0 for column and row, when this one, the reading, start at 1
         """
-        wb = load_workbook(xlsx_file)
-        for sheet in wb:
-
+        for sheet in self.workbook:
             if sheet.title == REF_DATA_SHEET_TITLE:
                 continue
 
@@ -681,10 +673,11 @@ class XlsxToDat():
             file_index = int(re.search(r'\d{3}', ennemy_origin_file).group())
             if limit_file_index >= 0 and limit_file_index != file_index:
                 continue  # Just to not work on all files everytime
+            print("Reading sheet: {}".format(sheet.title))
             ennemy[ennemy_origin_file] = Ennemy(game_data)
             current_ennemy = ennemy[ennemy_origin_file]
             current_ennemy.load_file_data(os.path.join(output_path, ennemy_origin_file), game_data)  # Loading the file to have all offset correct
-            current_ennemy.analyse_loaded_data(game_data)
+            current_ennemy.analyse_loaded_data(game_data, analyse_ia)
             current_ennemy.info_stat_data['monster_name'] = sheet.cell(ROW_MONSTER_NAME + 1, COL_MONSTER_INFO + 1 + 1).value
             current_ennemy.origin_file_name = ennemy_origin_file
 
@@ -794,3 +787,91 @@ class XlsxToDat():
                 renzokuken_list.append(int(cell_value.split(':')[0]))
 
             current_ennemy.info_stat_data['renzokuken'] = renzokuken_list
+
+            if analyse_ia:
+                print("Reading IA from XLSX (can take up to 5 sec per monster be patient)")
+                print("Starting reading IA at {}".format(time.perf_counter()))
+                # IA reading
+                index_row_ia = ROW_IA + 1 + 1
+                index_col_ia_ref = COL_ABILITIES + 1
+                current_ennemy.battle_script_data['ia_data'] = []
+                row_id_not_found = 0
+                ignore_header_line = False
+                for row_id, row in enumerate(sheet.iter_rows(min_row=index_row_ia, max_row=index_row_ia + 1000, min_col=index_col_ia_ref, max_col=index_col_ia_ref+50)):
+
+                    if ignore_header_line:
+                        ignore_header_line = False
+                        continue
+                    else:
+                        ignore_header_line = True
+                    id_command_read = None
+                    subject_id = None
+                    comparator = None
+                    left_param = None
+                    right_param = None
+                    jump_param = None
+                    id_command_futur = None
+                    param_value = []
+                    index_if = 0
+                    for column_id, cell in enumerate(row):  # Searching first column
+                        if not cell.value and not id_command_read:# Didn't find a value, it is indented
+                            continue
+                        elif not id_command_read:
+                            id_command_read = cell.value
+                            row_id_not_found = 0
+                            continue
+                        elif id_command_read:
+                            if str(id_command_read) in game_data.IA_CODE_NAME_LIST:
+                                command_dict = {'id': -1, 'param': ['']}  # Separator
+                            # Managing condition values
+                            elif id_command_read == 'IF':
+                                index_if +=1
+                                if index_if == 2 or index_if == 4 or index_if == 5:#Ignoring text data
+                                    continue
+                                if index_if == 1:
+                                    id_command_futur = 0x02
+                                    subject_id = cell.value
+                                    continue
+                                elif index_if == 3:
+                                    comparator = cell.value
+                                    continue
+                                elif index_if == 6:
+                                    left_param = cell.value
+                                    continue
+                                elif index_if == 7:
+                                    right_param = cell.value
+                                    continue
+                                elif index_if == 8:
+                                    jump_param = list(int(cell.value).to_bytes(2, 'little'))
+                                    continue
+                                else:
+                                    debug = cell.value
+                                    command_dict = {'id': id_command_futur, 'subject_id': subject_id, 'left_param': left_param,
+                                                'comparator': comparator, 'right_param': right_param, 'jump': jump_param, 'debug':debug }
+                            elif id_command_read == 'ENDIF' or id_command_read == 'ELSE':  # else
+                                id_command_futur = 35
+                                jump = list((int(cell.value)).to_bytes(2, byteorder='little'))
+                                command_dict = {'id': id_command_futur, 'param': jump}
+                            elif id_command_read == 'STOP':  # else
+                                command_dict = {'id': 0, 'param': []}
+                            elif id_command_read == 'END':  # We ignore those as they are here only for reading reason
+                                break
+                            else:  # Classical command
+                                if not id_command_futur:
+                                    id_command_futur = cell.value
+                                    continue
+                                param_title = sheet.cell(index_row_ia + row_id-1, index_col_ia_ref + column_id).value
+                                if param_title and ('param' in param_title):
+                                    param_value.append(cell.value)
+                                    continue
+                                else:
+                                    command_dict = {'id': id_command_read, 'param': param_value}
+                            current_ennemy.battle_script_data['ia_data'].append(command_dict)
+                            break
+
+
+                    if row_id_not_found > 4:
+                        break
+                    else:
+                        row_id_not_found+=1
+                print("Ending reading IA at {}".format(time.perf_counter()))
