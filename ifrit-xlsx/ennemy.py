@@ -32,7 +32,12 @@ class Ennemy():
                          {'op_code': 84, 'var_name': 'FirstBugSeen'},
                          {'op_code': 85, 'var_name': 'FirstBombSeen'},
                          {'op_code': 86, 'var_name': 'FirstT-RexaurSeen'},
-                         {'op_code': 87, 'var_name': 'LimitBreakIrvine'}, ]
+                         {'op_code': 87, 'var_name': 'LimitBreakIrvine'},
+                         {'op_code': 96, 'var_name': 'SetupRandomness96'},
+                         {'op_code': 97, 'var_name': 'SetupRandomness97'},
+                         {'op_code': 98, 'var_name': 'SetupRandomness98'},
+                         {'op_code': 99, 'var_name': 'SetupRandomness99'},
+                         ]
         self.was_physical = False
         self.was_magic = False
         self.was_item = False
@@ -70,15 +75,15 @@ class Ennemy():
                              {'op_code': 0x26, 'size': 4, 'func': self.__op_26_analysis},  # Target with status
                              {'op_code': 0x27, 'size': 2, 'func': self.__op_27_analysis},  # Flag set capacity
                              {'op_code': 0x28, 'size': 2, 'func': self.__op_28_analysis},  # Change stat
-                             {'op_code': 0x29, 'size': 0, 'func': self.__op_29_analysis},  # Unknown (gangrene) (Size 1 or 0 ?) followed by 2A
-                             {'op_code': 0x2A, 'size': 0, 'func': self.__op_2A_analysis},  # Unknown (gangrene)
+                             {'op_code': 0x29, 'size': 0, 'func': self.__op_29_analysis},  # Draw magic
+                             {'op_code': 0x2A, 'size': 0, 'func': self.__op_2A_analysis},  # Launch magic draw
                              {'op_code': 0x2B, 'size': 2, 'func': self.__op_2B_analysis},  # Unknown ultimecia 124
                              {'op_code': 0x2C, 'size': 0, 'func': self.__op_2C_analysis},  # Unknown seifer
                              {'op_code': 0x2D, 'size': 3, 'func': self.__op_2D_analysis},  # Change elemental value
                              {'op_code': 0x2E, 'size': 0, 'func': self.__op_2E_analysis},  # Cronos
                              {'op_code': 0x30, 'size': 0, 'func': self.__op_30_analysis},  # DEACTIVATE AS TARGET (gangrene)
                              {'op_code': 0x31, 'size': 1, 'func': self.__op_31_analysis},  # Give gforce (tomberrry)
-                             {'op_code': 0x32, 'size': 0, 'func': self.__op_32_analysis},  # Unknown (shiva)
+                             {'op_code': 0x32, 'size': 0, 'func': self.__op_32_analysis},  # Unknown (shiva/brahman)
                              {'op_code': 0x33, 'size': 0, 'func': self.__op_33_analysis},  # Activate target
                              {'op_code': 0x34, 'size': 1, 'func': self.__op_34_analysis},  # Unknown (shiva)
                              {'op_code': 0x35, 'size': 1, 'func': self.__op_35_analysis},  # Activate ennemy as target
@@ -88,7 +93,7 @@ class Ennemy():
                              {'op_code': 0x39, 'size': 0, 'func': self.__op_39_analysis},  # Game over
                              {'op_code': 0x3A, 'size': 1, 'func': self.__op_3A_analysis},  # Unknown seifer and ultimecia 126
                              {'op_code': 0x3B, 'size': 2, 'func': self.__op_3B_analysis},  # Unknown (ultimecia 124)
-                             {'op_code': 0x3C, 'size': 1, 'func': self.__op_3C_analysis},  # Unknown
+                             {'op_code': 0x3C, 'size': 1, 'func': self.__op_3C_analysis},  # Increase Max HP
                              {'op_code': 0x3D, 'size': 0, 'func': self.__op_3D_analysis},  # Unknown Minotaure
                              {'op_code': 0x41, 'size': 0, 'func': self.__op_41_analysis},  # Unknown goliath (unused ?)
                              ]
@@ -561,10 +566,10 @@ class Ennemy():
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0]]}
 
     def __op_29_analysis(self, op_code, game_data: GameData):
-        return {'text': 'UNKNOWN ACTION', 'param': []}
+        return {'text': 'DRAW RANDOM MAGIC', 'param': []}
 
     def __op_2A_analysis(self, op_code, game_data: GameData):
-        return {'text': 'UNKNOWN ACTION', 'param': []}
+        return {'text': 'LAUNCH MAGIC DRAW', 'param': []}
 
     def __op_1B_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
@@ -591,7 +596,7 @@ class Ennemy():
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0]]}
 
     def __op_3C_analysis(self, op_code, game_data: GameData):
-        return {'text': 'UNKNOWN ACTION', 'param': [op_code[0]]}
+        return {'text': 'Increase Max HP (but not current) by {}'.format(op_code[0]), 'param': [op_code[0]]}
 
     def __op_3D_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
