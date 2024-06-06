@@ -542,17 +542,12 @@ class DatToXlsx():
             index_title = 0
 
             row_index['ia_data'] = ROW_IA
-            print("WRITING XLSX IA")
-            print(ennemy.battle_script_data['ia_data'])
-            for code_section in ennemy.battle_script_data['ia_data']:
+            for code_index, code_section in enumerate(ennemy.battle_script_data['ia_data']):
                 worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
                                       ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 10) + str(row_index['ia_data']),
-                                      list_title_text[index_title], cell_format=self.column_title_style)
-                index_title += 1
+                                      list_title_text[code_index], cell_format=self.column_title_style)
                 col_ia_index_ref = COL_ABILITIES
                 for ia_data in code_section:
-
-                    print(ia_data)
                     format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                     col_ia_index = col_ia_index_ref
                     if ia_data['id'] == 2:  # IF
@@ -604,7 +599,7 @@ class DatToXlsx():
                             worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
                             col_ia_index += 1
                     row_index['ia_data'] += 2
-                row_index['ia_data'] += 4  # Adding space between IA zone
+                row_index['ia_data'] += 2  # Adding space between IA zone
             # Post validation
             self.__validation_post_process_all(worksheet, game_data)
 
@@ -651,7 +646,7 @@ class DatToXlsx():
             temp_dict[new_key] = temp_list.copy()
         # game_data.game_info_test['sub'] = temp_dict
 
-        #print(game_data.game_info_test)
+        # print(game_data.game_info_test)
         # End monster.txt purpose
 
         self.workbook.close()
@@ -699,11 +694,11 @@ class XlsxToDat():
 
             # Def reading
             list_value = []
-            for i in range(2, len(game_data.magic_type_values)+2):
+            for i in range(2, len(game_data.magic_type_values) + 2):
                 list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
             current_ennemy.info_stat_data['elem_def'] = list_value
             list_value = []
-            for i in range(len(game_data.magic_type_values)+2, len(game_data.magic_type_values) +2+ len(game_data.status_values)):
+            for i in range(len(game_data.magic_type_values) + 2, len(game_data.magic_type_values) + 2 + len(game_data.status_values)):
                 list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
             current_ennemy.info_stat_data['status_def'] = list_value
             # Item read
@@ -799,8 +794,11 @@ class XlsxToDat():
                 current_ennemy.battle_script_data['ia_data'] = []
                 row_id_not_found = 0
                 ignore_header_line = False
-                for row_id, row in enumerate(sheet.iter_rows(min_row=index_row_ia, max_row=index_row_ia + 1000, min_col=index_col_ia_ref, max_col=index_col_ia_ref+50)):
-
+                end_hit = False
+                for row_id, row in enumerate(
+                        sheet.iter_rows(min_row=index_row_ia, max_row=index_row_ia + 1000, min_col=index_col_ia_ref, max_col=index_col_ia_ref + 50)):
+                    if end_hit:
+                        break
                     if ignore_header_line:
                         ignore_header_line = False
                         continue
@@ -816,7 +814,7 @@ class XlsxToDat():
                     param_value = []
                     index_if = 0
                     for column_id, cell in enumerate(row):  # Searching first column
-                        if not cell.value and not id_command_read:# Didn't find a value, it is indented
+                        if not cell.value and not id_command_read:  # Didn't find a value, it is indented
                             continue
                         elif not id_command_read:
                             id_command_read = cell.value
@@ -824,11 +822,13 @@ class XlsxToDat():
                             continue
                         elif id_command_read:
                             if str(id_command_read) in game_data.IA_CODE_NAME_LIST:
-                                command_dict = {'id': -1, 'param': ['']}  # Separator
+                                if str(id_command_read) == game_data.IA_CODE_NAME_LIST[-1]:
+                                    end_hit = True
+                                command_dict = {'id': -1, 'param': [str(id_command_read)], 'end':end_hit}  # Separator
                             # Managing condition values
                             elif id_command_read == 'IF':
-                                index_if +=1
-                                if index_if == 2 or index_if == 4 or index_if == 5:#Ignoring text data
+                                index_if += 1
+                                if index_if == 2 or index_if == 4 or index_if == 5:  # Ignoring text data
                                     continue
                                 if index_if == 1:
                                     id_command_futur = 0x02
@@ -849,7 +849,7 @@ class XlsxToDat():
                                 else:
                                     debug = cell.value
                                     command_dict = {'id': id_command_futur, 'subject_id': subject_id, 'left_param': left_param,
-                                                'comparator': comparator, 'right_param': right_param, 'jump': jump_param, 'debug':debug }
+                                                    'comparator': comparator, 'right_param': right_param, 'jump': jump_param, 'debug': debug}
                             elif id_command_read == 'ENDIF' or id_command_read == 'ELSE':  # else
                                 id_command_futur = 35
                                 jump = list((int(cell.value)).to_bytes(2, byteorder='little'))
@@ -862,7 +862,7 @@ class XlsxToDat():
                                 if not id_command_futur:
                                     id_command_futur = cell.value
                                     continue
-                                param_title = sheet.cell(index_row_ia + row_id-1, index_col_ia_ref + column_id).value
+                                param_title = sheet.cell(index_row_ia + row_id - 1, index_col_ia_ref + column_id).value
                                 if param_title and ('param' in param_title):
                                     param_value.append(cell.value)
                                     continue
@@ -871,9 +871,8 @@ class XlsxToDat():
                             current_ennemy.battle_script_data['ia_data'].append(command_dict)
                             break
 
-
                     if row_id_not_found > 4:
                         break
                     else:
-                        row_id_not_found+=1
+                        row_id_not_found += 1
                 print("Ending reading IA at {}".format(time.perf_counter()))
