@@ -169,7 +169,7 @@ class DatToXlsx():
         self.__validate_renzokuken(worksheet, game_data)
 
     def __validate_stat(self, worksheet, game_data: GameData):
-        worksheet.data_validation(1, COL_STAT, 1 + 7, COL_STAT + 4,
+        worksheet.data_validation(1, COL_STAT+1, 1 + 6, COL_STAT +1+ 4,
                                   {'validate': 'integer', 'criteria': 'between',
                                    'minimum': game_data.STAT_MIN_VAL, 'maximum': game_data.STAT_MAX_VAL,
                                    'input_title': 'Stat',
@@ -540,17 +540,22 @@ class DatToXlsx():
                                  self.border_center_pink_style, self.border_center_lime_style, self.border_center_blue_style, self.border_center_magenta_style,
                                  self.border_center_silver_style, self.border_center_cyan_style]
             index_title = 0
-
+            last_was_end = False
+            last_was_else0 = False
             row_index['ia_data'] = ROW_IA
             for code_index, code_section in enumerate(ennemy.battle_script_data['ia_data']):
                 worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
-                                      ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 10) + str(row_index['ia_data']),
+                                      ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 20) + str(row_index['ia_data']),
                                       list_title_text[code_index], cell_format=self.column_title_style)
                 col_ia_index_ref = COL_ABILITIES
                 for ia_data in code_section:
                     format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                     col_ia_index = col_ia_index_ref
                     if ia_data['id'] == 2:  # IF
+                        if last_was_else0:
+                            col_ia_index_ref -=1
+                            col_ia_index -=1
+                            format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                         worksheet.write(row_index['ia_data'], col_ia_index, 'IF condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['if_text'], format_color)
                         worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Subject ID', self.column_title_style)
@@ -572,13 +577,20 @@ class DatToXlsx():
                         worksheet.write(row_index['ia_data'], col_ia_index + 9, 'Debug param', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index + 9, ia_data['debug'], self.border_center_style)
                         col_ia_index_ref += 1  # One cell moving to indent
+                        last_was_end = False
+                        last_was_else0 = False
                     elif ia_data['id'] == 0:  # STOP
                         worksheet.write(row_index['ia_data'], col_ia_index, 'STOP condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
+                        last_was_end = False
+                        last_was_else0 = False
                     elif ia_data['id'] == 35:  # ENDIF/ELSE
                         col_ia_index_ref -= 1
+                        if ia_data['text'] == 'ELSE' and last_was_end and ia_data['param'][0]==0 :
+                            col_ia_index_ref += 1
                         col_ia_index = col_ia_index_ref
                         format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
                         col_ia_index += 1
@@ -588,6 +600,18 @@ class DatToXlsx():
                             col_ia_index += 1
                         if ia_data['text'] == 'ELSE':
                             col_ia_index_ref += 1
+                            if ia_data['param'][0] == 0:
+                                last_was_else0 = True
+                            else:
+                                last_was_else0 = False
+                        else:
+                            last_was_else0 = False
+                        if ia_data['text'] == 'END':
+                            last_was_end = True
+                        else:
+                            last_was_end = False
+                        #if ia_data['text'] == 'ENDIF':
+                        #    col_ia_index_ref -= 1
                     else:
                         worksheet.write(row_index['ia_data'], col_ia_index, 'Command ID', self.column_title_style)
                         worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['id'], self.border_center_style)
@@ -598,6 +622,8 @@ class DatToXlsx():
                             worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
                             worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
                             col_ia_index += 1
+                        last_was_end = False
+                        last_was_else0 = False
                     row_index['ia_data'] += 2
                 row_index['ia_data'] += 2  # Adding space between IA zone
             # Post validation
@@ -632,22 +658,6 @@ class DatToXlsx():
         for index, el in game_data.special_action.items():
             worksheet.write(index + 1, REF_DATA_COL_SPECIAL_ACTION, el['ref'], self.border_style)
         worksheet.autofit()
-
-        # For monster.txt purpose
-        temp_dict = {}
-        for var_name, list_current_monst in game_data.game_info_test.items():
-            if var_name == 'list_monster':
-                pass
-            new_key = var_name + "_sub"
-            temp_list = game_data.game_info_test['list_monster'].copy()
-            for temp in list_current_monst:
-                if temp in temp_list:
-                    temp_list.remove(temp)
-            temp_dict[new_key] = temp_list.copy()
-        # game_data.game_info_test['sub'] = temp_dict
-
-        # print(game_data.game_info_test)
-        # End monster.txt purpose
 
         self.workbook.close()
 
@@ -868,6 +878,8 @@ class XlsxToDat():
                                     continue
                                 else:
                                     command_dict = {'id': id_command_read, 'param': param_value}
+
+
                             current_ennemy.battle_script_data['ia_data'].append(command_dict)
                             break
 

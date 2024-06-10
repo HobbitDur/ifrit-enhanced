@@ -513,7 +513,7 @@ class Ennemy():
             list_code = [init_code, ennemy_turn_code, counterattack_code, death_code, before_dying_or_hit_code]
             self.battle_script_data['ia_data'] = []
             for index, code in enumerate(list_code):
-                last_index_0 = 0
+                first_index_0 = 0
                 list_bracket = [0] * 10
                 last_stop = False
                 index_read = 0
@@ -536,21 +536,26 @@ class Ennemy():
                         ## Getting last_index that is zero
                         for i in range(len(list_bracket)):
                             if list_bracket[i] == 0:
-                                last_index_0 = i
+                                first_index_0 = i
                                 break
                         ## Decreasing coutdown
-                        if last_index_0 > 0:
-                            for i in range(last_index_0):
+                        if first_index_0 > 0:
+                            for i in range(first_index_0):
                                 list_bracket[i] -= op_code_ref['size'] + 1
                         if result['id'] == 0x02:  # If it's a if, add a bracket
-                            list_bracket[last_index_0] = result['jump'][0]
+                            list_bracket[first_index_0] = result['jump'][0]
                         elif result['id'] == 0x23:  # IF it's a else, reinit last bracket
-                            list_bracket[last_index_0 - 1] = result['param'][0]
-                        else:  # Check if end
-                            for i in range(1, last_index_0 + 1):
-                                if last_index_0 > 0 and list_bracket[last_index_0 - i] == 0:
-                                    ret = {'id': 0x23, 'text': 'END', 'param': [0]}
+                            list_bracket[first_index_0 - 1] = result['param'][0]
+                        for i in range(1, first_index_0 + 1):
+                            if first_index_0 > 0 and list_bracket[first_index_0 - i] == 0:
+                                ret = {'id': 0x23, 'text': 'END', 'param': []}
+                                if i == 1 and  result['id'] == 0x23 and result['param'][0] == 0:# if its a else with 0 value, no end needed on the last value
+                                    continue
+                                elif result['id'] == 0x23:
+                                    list_result.insert(len(list_result)-1, ret)
+                                else:
                                     list_result.append(ret)
+
                         # END Managing END
                     else:
                         result = [code[index_read]]  # Reading ID
@@ -770,10 +775,10 @@ class Ennemy():
 
     def __op_23_analysis(self, op_code, game_data):
         jump = int.from_bytes(bytearray([op_code[0], op_code[1]]), byteorder='little')
-        if jump > 0:
-            text = 'ELSE'
-        else:
+        if jump == 0:
             text = 'ENDIF'
+        else:
+            text = 'ELSE'
         return {'text': text, 'param': [jump]}
 
     def __op_00_analysis(self, op_code, game_data):
@@ -831,6 +836,7 @@ class Ennemy():
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
         op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
+        if op_code[4] != 0:
 
         if op_code_comparator < len(self.list_comparator):
             comparator = self.list_comparator[op_code_comparator]

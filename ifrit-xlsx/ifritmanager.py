@@ -90,9 +90,10 @@ class IfritManager():
         FILE_MONSTER_OUTPUT_REGEX = os.path.join(FILE_MONSTER_OUTPUT_PATH, "c0m*.dat")
 
         if local_launch_option == "fs_to_xlsx" or local_launch_option == "both":
-            print("-------Unpacking fs file-------")
-            fshandler.unpack(self.FOLDER_INPUT, self.FILE_INPUT_BATTLE)
 
+            if not local_no_pack:
+                print("-------Unpacking fs file-------")
+                fshandler.unpack(self.FOLDER_INPUT, self.FILE_INPUT_BATTLE)
             # Check if .dat exist
             file_monster = glob.glob(FILE_MONSTER_INPUT_REGEX)
 
