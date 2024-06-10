@@ -836,8 +836,6 @@ class Ennemy():
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
         op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
-        if op_code[4] != 0:
-
         if op_code_comparator < len(self.list_comparator):
             comparator = self.list_comparator[op_code_comparator]
         else:
