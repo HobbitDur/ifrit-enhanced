@@ -48,18 +48,22 @@ class Ennemy():
         self.list_op_code = [{'op_code': 0x00, 'size': 0, 'func': self.__op_00_analysis},  # Stop
                              {'op_code': 0x01, 'size': 1, 'func': self.__op_01_analysis},  # Show battle text
                              {'op_code': 0x02, 'size': 7, 'func': self.__op_02_analysis},  # IF condition
+                             {'op_code': 0x03, 'size': 0, 'func': self.__op_03_analysis},  # Unknown/unused
                              {'op_code': 0x04, 'size': 1, 'func': self.__op_04_analysis},  # Target
                              {'op_code': 0x05, 'size': 3, 'func': self.__op_05_analysis},  # Unknown
                              {'op_code': 0x06, 'size': 0, 'func': self.__op_06_analysis},  # Unknown ultimecia 126 ? (maybe not if 0x3A size 1)
+                             {'op_code': 0x07, 'size': 0, 'func': self.__op_07_analysis},  # Unknown/unused
                              {'op_code': 0x08, 'size': 0, 'func': self.__op_08_analysis},  # End combat
                              {'op_code': 0x09, 'size': 1, 'func': self.__op_09_analysis},  # Change animation
                              {'op_code': 0x0B, 'size': 3, 'func': self.__op_0B_analysis},  # Random attack
                              {'op_code': 0x0C, 'size': 1, 'func': self.__op_0C_analysis},  # Attack/animation
                              {'op_code': 0x0E, 'size': 2, 'func': self.__op_0E_analysis},  # Set var
                              {'op_code': 0x0F, 'size': 2, 'func': self.__op_0F_analysis},  # Set var globally
+                             {'op_code': 0x10, 'size': 0, 'func': self.__op_10_analysis},  # Unknown/unused
                              {'op_code': 0x11, 'size': 2, 'func': self.__op_11_analysis},  # Set var map
                              {'op_code': 0x12, 'size': 2, 'func': self.__op_12_analysis},  # Add var
                              {'op_code': 0x13, 'size': 2, 'func': self.__op_13_analysis},  # Add var global
+                             {'op_code': 0x14, 'size': 0, 'func': self.__op_14_analysis},  # Unknown/unused
                              {'op_code': 0x15, 'size': 2, 'func': self.__op_15_analysis},  # ADD var savemap
                              {'op_code': 0x16, 'size': 0, 'func': self.__op_16_analysis},  # FUll hp
                              {'op_code': 0x17, 'size': 1, 'func': self.__op_17_analysis},  # Deactivate RUn away
@@ -133,6 +137,7 @@ class Ennemy():
         self.__analyze_texture_section(game_data)
 
     def write_data_to_file(self, game_data, path, write_ia=True):
+        print("Writing monster {}".format(self.info_stat_data["monster_name"]))
         # First copy original file
         full_dest_path = os.path.join(path, self.origin_file_name)
         # Then load file (python make it difficult to directly modify files)
@@ -520,7 +525,8 @@ class Ennemy():
                 list_result = []
                 while index_read < len(code):
                     op_code_ref = [x for x in self.list_op_code if x['op_code'] == code[index_read]]
-                    if not op_code_ref and code[index_read] > 0x40:
+
+                    if not op_code_ref and code[index_read] >= 0x40:
                         index_read += 1
                         continue
                     elif op_code_ref:  # >0x40 not used
@@ -555,7 +561,6 @@ class Ennemy():
                                     list_result.insert(len(list_result)-1, ret)
                                 else:
                                     list_result.append(ret)
-
                         # END Managing END
                     else:
                         result = [code[index_read]]  # Reading ID
@@ -657,6 +662,14 @@ class Ennemy():
     def __op_1B_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1], op_code[2], op_code[3], op_code[4]]}
 
+    def __op_10_analysis(self, op_code, game_data: GameData):
+        return {'text': 'UNKNOWN/UNUSED', 'param': []}
+    def __op_03_analysis(self, op_code, game_data: GameData):
+        return {'text': 'UNKNOWN/UNUSED', 'param': []}
+    def __op_07_analysis(self, op_code, game_data: GameData):
+        return {'text': 'UNKNOWN/UNUSED', 'param': []}
+    def __op_14_analysis(self, op_code, game_data: GameData):
+        return {'text': 'UNKNOWN/UNUSED', 'param': []}
     def __op_05_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1], op_code[2]]}
 
@@ -767,7 +780,7 @@ class Ennemy():
         if op_code[1] == 10:
             mod_change = "REINIT {} TO BASE VALUE".format(aptitude)
         else:
-            mod_change = "MULTIPLY {} BY {}".format(aptitude, op_code[1])
+            mod_change = "MULTIPLY {} BY {}".format(aptitude, op_code[1]/10)
         return {'text': mod_change, 'param': [op_code[0], op_code[1]]}
 
     def __op_1C_analysis(self, op_code, game_data):

@@ -162,6 +162,10 @@ class GameData():
         encode_list = []
         while c < str_size:
             char = string[c]
+            if char == '\\':
+                encode_list.append(0x02)
+                c += 2
+                continue
             if char == '\n':  # \n{NewPage}\n,\n
                 if '{NewPage}' in string[c + 1:c + 10]:
                     encode_list.append(0x01)
