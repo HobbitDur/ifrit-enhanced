@@ -122,7 +122,7 @@ class IfritManager():
 
             if not local_no_pack:
                 print("-------Packing to fs file-------")
-                fshandler.pack(FILE_MONSTER_INPUT_PATH, self.FILE_OUTPUT_BATTLE)
+                fshandler.pack(FILE_MONSTER_INPUT_PATH, self.FILE_OUTPUT_BATTLE, local_lang)
             if local_delete:
                 # Delete files
                 print("-------Deleting files-------")
