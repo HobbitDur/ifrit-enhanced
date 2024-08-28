@@ -14,16 +14,16 @@
   {"op_code": 99, "var_name": "SetupRandomness99"}
   ],
 "list_target_char": ["Squall", "Zell", "Irvine", "Quistis", "Rinoa", "Selphie", "Seifer", "Edea", "Laguna", "Kiros", "Ward"],
-"list_comparator": ["==", "<", ">", "≠", "≤", "≥"],
+"list_comparator": ["==", "&lt;", "&gt;", "≠", "≤", "≥"],
 "op_code_info":[
     {"op_code": 0, "size": 0, "text": "STOP", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Stop"},
     {"op_code": 1, "size": 1, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Show battle text"},
     {"op_code": 2, "size": 7, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "IF condition"},
     {"op_code": 3, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown/unused"},
     {"op_code": 4, "size": 1, "text": "TARGET {}", "param_index": [0], "complexity": "simple", "param_type":  ["target"], "param_list":  [], "comment":  "Target"},
-    {"op_code": 5, "size": 3, "text": "UNKNOWN ACTION {}|{}|{}", "param_index": [0,1,2], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown"},
+    {"op_code": 5, "size": 3, "text": "UNKNOWN ACTION {}|{}|{}", "param_index": [0,1,2], "complexity": "simple", "param_type":  ["int", "int", "int"], "param_list":  [], "comment":  "Unknown"},
     {"op_code": 6, "size": 0, "text": "UNKNOWN ACTION", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown ultimecia 126 ? (maybe not if 0x3A size 1)"},
-    {"op_code": 7, "size": 0, "text": "'UNKNOWN/UNUSED", "param_index": [0], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown/unused"},
+    {"op_code": 7, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [0], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown/unused"},
     {"op_code": 8, "size": 0, "text": "END COMBAT", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "End combat"},
     {"op_code": 9, "size": 1, "text": "CHANGE MONSTER ANIMATION TO N°{}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Change animation"},
     {"op_code": 11, "size": 3, "text": "Randomly use ability {} or {} or {}", "param_index": [0,1,2], "complexity": "simple", "param_type":  ["int", "int", "int"], "param_list":  [], "comment":  "Random attack"},
@@ -41,7 +41,7 @@
     {"op_code": 24, "size": 1, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Show battle text with debug ?"},
     {"op_code": 25, "size": 1, "text": "UNKNOWN ACTION {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown"},
     {"op_code": 26, "size": 1, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Show battle text + lock"},
-    {"op_code": 27, "size": 5, "text": "UNKNOWN ACTION {}|{}|{}|{}|{}", "param_index": [0,1,2,3,4], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown (biggs 1)"},
+    {"op_code": 27, "size": 5, "text": "UNKNOWN ACTION {}|{}|{}|{}|{}", "param_index": [0,1,2,3,4], "complexity": "simple", "param_type":  ["int","int","int","int","int"], "param_list":  [], "comment":  "Unknown (biggs 1)"},
     {"op_code": 28, "size": 1, "text": "WAIT {} TEXT", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Wait text"},
     {"op_code": 29, "size": 1, "text": "MAKE ENNEMY N°{} LEAVE COMBAT", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Leave ennemy"},
     {"op_code": 30, "size": 1, "text": "LAUNCH SPECIAL ACTION {}", "param_index": [0], "complexity": "simple", "param_type":  ["special_action"], "param_list":  [], "comment":  "Launch special action"},
@@ -55,7 +55,7 @@
     {"op_code": 40, "size": 2, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Change stat"},
     {"op_code": 41, "size": 0, "text": "DRAW RANDOM MAGIC", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Draw magic"},
     {"op_code": 42, "size": 0, "text": "LAUNCH MAGIC DRAW", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Launch magic draw"},
-    {"op_code": 43, "size": 2, "text": "UNKNOWN ACTION {}|{}", "param_index": [0,1], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown ultimecia 124"},
+    {"op_code": 43, "size": 2, "text": "UNKNOWN ACTION {}|{}", "param_index": [0,1], "complexity": "simple", "param_type":  ["int", "int"], "param_list":  [], "comment":  "Unknown ultimecia 124"},
     {"op_code": 44, "size": 0, "text": "UNKNOWN ACTION", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown seifer"},
     {"op_code": 45, "size": 3, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Change elemental value"},
     {"op_code": 46, "size": 0, "text": "UNKNOWN ACTION", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Cronos"},
@@ -70,9 +70,10 @@
     {"op_code": 56, "size": 1, "text": "GIVE ITEM {}", "param_index": [0], "complexity": "simple", "param_type":  ["item"], "param_list":  [], "comment":  "Give object"},
     {"op_code": 57, "size": 0, "text": "GAME OVER", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Game over"},
     {"op_code": 58, "size": 1, "text": "UNKNOWN ACTION {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown seifer and ultimecia 126"},
-    {"op_code": 59, "size": 2, "text": "UNKNOWN ACTION {}|{}", "param_index": [0,1], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown (ultimecia 124)"},
+    {"op_code": 59, "size": 2, "text": "UNKNOWN ACTION {}|{}", "param_index": [0,1], "complexity": "simple", "param_type":  ["int", "int"], "param_list":  [], "comment":  "Unknown (ultimecia 124)"},
     {"op_code": 60, "size": 1, "text": "Increase Max HP (but not current) by {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Increase Max HP"},
-    {"op_code": 61, "size": 0, "text": "'UNKNOWN ACTION", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown Minotaure"},
-    {"op_code": 65, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown goliath (unused ?)"}
+    {"op_code": 61, "size": 0, "text": "'UNKNOWN ACTION", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown Minotaure"},
+    {"op_code": 65, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown goliath (unused ?)"},
+    {"op_code": 255, "size": 0, "text": "UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Default unused when op_id doesn't exist"}
 ]
 }
