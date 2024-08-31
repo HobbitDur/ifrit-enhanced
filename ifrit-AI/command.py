@@ -3,25 +3,22 @@ from gamedata import GameData
 
 class Command():
 
-    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name=(), line_index=0):
+    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name="", line_index=0, color="#0055ff"):
         self.__op_id = op_id
         self.__op_code = op_code
         self.__battle_text = battle_text
         self.__text = ""
         self.__text_colored = ""
-        self.__game_data = game_data
+        self.game_data = game_data
         self.info_stat_data_monster_name = info_stat_data_monster_name
-        self.__color_param = "#8a1624"
-        self.op_id_widget = None
-        self.op_code_widget = []
-        self.text_widget = None
+        self.__color_param = color
         self.line_index = line_index
-        self.if_index = 0
-        self.__analyse_op_data()
+        self.__if_index = 0
         self.was_physical = False
         self.was_magic = False
         self.was_item = False
         self.was_gforce = False
+        self.__analyse_op_data()
 
     def __str__(self):
         return f"ID: {self.__op_id}, op_code: {self.__op_code}, text: {self.__text}"
@@ -40,6 +37,7 @@ class Command():
         self.__analyse_op_data()
 
     def set_op_code(self, op_code):
+        print(op_code)
         self.__op_code = op_code
         self.__analyse_op_data()
 
@@ -52,8 +50,11 @@ class Command():
     def get_text(self):
         return self.__text
 
+    def set_if_index(self, if_index):
+        self.__if_index = if_index
+
     def __get_op_code_line_info(self):
-        all_op_code_info = self.__game_data.ai_data_json["op_code_info"]
+        all_op_code_info = self.game_data.ai_data_json["op_code_info"]
         op_research = [x for x in all_op_code_info if x["op_code"] == self.__op_id]
         if op_research:
             op_research = op_research[0]
@@ -77,32 +78,32 @@ class Command():
                     # There is specific var known, if not in the list it means it's a generic one
                     param_value.append(self.__get_var_name(self.__op_code[op_index]))
                 elif type == "special_action":
-                    if self.__op_code[op_index] < len(self.__game_data.special_action):
-                        param_value.append(self.__game_data.special_action[self.__op_code[op_index]]['name'])
+                    if self.__op_code[op_index] < len(self.game_data.special_action):
+                        param_value.append(self.game_data.special_action[self.__op_code[op_index]]['name'])
                     else:
                         param_value.append("UNKNOWN SPECIAL_ACTION")
                 elif type == "card":
-                    if self.__op_code[op_index] < len(self.__game_data.card_values):
-                        param_value.append(self.__game_data.card_values[self.__op_code[op_index]]['name'])
+                    if self.__op_code[op_index] < len(self.game_data.card_values):
+                        param_value.append(self.game_data.card_values[self.__op_code[op_index]]['name'])
                     else:
                         param_value.append("UNKNOWN CARD")
                 elif type == "monster":
-                    if self.__op_code[op_index] < len(self.__game_data.monster_values):
-                        param_value.append(self.__game_data.monster_values[self.__op_code[op_index]])
+                    if self.__op_code[op_index] < len(self.game_data.monster_values):
+                        param_value.append(self.game_data.monster_values[self.__op_code[op_index]])
                     else:
                         param_value.append("UNKNOWN MONSTER")
                 elif type == "item":
-                    if self.__op_code[op_index] < len(self.__game_data.item_values):
-                        param_value.append(self.__game_data.item_values[self.__op_code[op_index]]['name'])
+                    if self.__op_code[op_index] < len(self.game_data.item_values):
+                        param_value.append(self.game_data.item_values[self.__op_code[op_index]]['name'])
                     else:
                         param_value.append("UNKNOWN ITEM")
                 elif type == "gforce":
-                    if self.__op_code[op_index] < len(self.__game_data.gforce_values):
-                        param_value.append(self.__game_data.gforce_values[self.__op_code[op_index]])
+                    if self.__op_code[op_index] < len(self.game_data.gforce_values):
+                        param_value.append(self.game_data.gforce_values[self.__op_code[op_index]])
                     else:
                         param_value.append("UNKNOWN GFORCE")
                 elif type == "target":
-                    param_value.append(self.__get_target(self.__op_code[op_index], self.__game_data))
+                    param_value.append(self.__get_target(self.__op_code[op_index], self.game_data))
                 else:
                     print("Unknown type, considering a int")
                     param_value.append(self.__op_code[op_index])
@@ -123,8 +124,8 @@ class Command():
         return [ret, []]
 
     def __op_26_analysis(self, op_code):
-        if op_code[3] < len(self.__game_data.status_ia_values):
-            status = self.__game_data.status_ia_values[op_code[3]]['name']
+        if op_code[3] < len(self.game_data.status_ia_values):
+            status = self.game_data.status_ia_values[op_code[3]]['name']
         else:
             status = "UNKNOWN STATUS"
         if op_code[0] + op_code[2]:
@@ -132,7 +133,7 @@ class Command():
         else:
             info = " unknown {}|{}".format(op_code[0], op_code[2])
         ret = "TARGET {} WITH STATUS {}{}"
-        return [ret, [self.__get_target(op_code[1], self.__game_data), status, info]]
+        return [ret, [self.__get_target(op_code[1], self.game_data), status, info]]
 
     def __op_18_analysis(self, op_code):
         ret = self.__op_01_analysis(op_code)
@@ -164,15 +165,16 @@ class Command():
     def __op_23_analysis(self, op_code):
         jump = int.from_bytes(bytearray([op_code[0], op_code[1]]), byteorder='little')
         if jump == 0:
-            text = 'ENDIF'
+            return ['ENDIF', []]
+        elif jump == 3:
+            return ['ELSE go next line', []]
         else:
-            text = 'ELSE'
-        return [text, []]
+            return ['ELSE jump {} bytes forward', [jump]]
 
     def __op_2D_analysis(self, op_code):
         # op_2D = ['element', 'elementval', '?']
-        if op_code[0] < len(self.__game_data.magic_type_values):
-            element = self.__game_data.magic_type_values[op_code[0]]
+        if op_code[0] < len(self.game_data.magic_type_values):
+            element = self.game_data.magic_type_values[op_code[0]]
         else:
             element = "UNKNOWN ELEMENT TYPE"
         element_val = op_code[1]
@@ -196,13 +198,13 @@ class Command():
     def __op_02_analysis(self, op_code):
         # op_02 = ['subject_id', 'target', 'comparator', 'value', 'debug']
         subject_id = op_code[0]
-        target = self.__get_target(op_code[1], self.__game_data)
-        target_reverse = self.__get_target(op_code[1], self.__game_data, True)
+        target = self.__get_target(op_code[1], self.game_data)
+        target_reverse = self.__get_target(op_code[1], self.game_data, True)
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
         op_code_jump = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
-        if op_code_comparator < len(self.__game_data.ai_data_json['list_comparator']):
-            comparator = self.__game_data.ai_data_json['list_comparator'][op_code_comparator]
+        if op_code_comparator < len(self.game_data.ai_data_json['list_comparator']):
+            comparator = self.game_data.ai_data_json['list_comparator'][op_code_comparator]
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
@@ -219,15 +221,15 @@ class Command():
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 4:
             left_subject = {'text': 'STATUS OF {}', 'param': [target]}
-            right_subject = {'text': '{}', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
+            right_subject = {'text': '{}', 'param': [self.game_data.status_ia_values[op_code_value]['name']]}
         elif subject_id == 5:
             left_subject = {'text': 'STATUS OF {}', 'param': [target_reverse]}
-            right_subject = {'text': '{}', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
+            right_subject = {'text': '{}', 'param': [self.game_data.status_ia_values[op_code_value]['name']]}
         elif subject_id == 6:
             left_subject = {'text': 'NUMBER OF MEMBER OF {}', 'param': [target_reverse]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 9:
-            left_subject = {'text': "{}", 'param': [self.__get_target(op_code[3], self.__game_data)]}
+            left_subject = {'text': "{}", 'param': [self.__get_target(op_code[3], self.game_data)]}
             right_subject = {'text': 'ALIVE', 'param': []}
         elif subject_id == 10:
             if op_code[1] == 0:
@@ -255,14 +257,14 @@ class Command():
             elif op_code[1] == 4:
                 if op_code_value >= 64:
                     attack_condition = "LAST GFORCE LAUNCH WAS"
-                    attack_type = self.__game_data.gforce_values[op_code_value - 64]
+                    attack_type = self.game_data.gforce_values[op_code_value - 64]
                 else:
                     if self.was_magic:
-                        ret = self.__game_data.magic_values[op_code_value]['name']
+                        ret = self.game_data.magic_values[op_code_value]['name']
                     elif self.was_item:
-                        ret = self.__game_data.item_values[op_code_value]['name']
+                        ret = self.game_data.item_values[op_code_value]['name']
                     elif self.was_physical:
-                        ret = self.__game_data.special_action[op_code_value]['name']
+                        ret = self.game_data.special_action[op_code_value]['name']
                     else:
                         ret = str(op_code_value)
                     attack_condition = "LAST ACTION LAUNCH WAS"
@@ -272,7 +274,7 @@ class Command():
                     self.was_physical = False
             elif op_code[1] == 5:
                 attack_condition = "Last attack was of element"
-                attack_type = str(self.__game_data.magic_type_values[op_code_value])
+                attack_type = str(self.game_data.magic_type_values[op_code_value])
             else:
                 attack_condition = "Unknown last attack {}".format(op_code[1])
                 attack_type = "Unknown attack type {}".format(op_code_value)
@@ -316,7 +318,7 @@ class Command():
 
     def __get_var_name(self, id):
         # There is specific var known, if not in the list it means it's a generic one
-        all_var_info = self.__game_data.ai_data_json["list_var"]
+        all_var_info = self.game_data.ai_data_json["list_var"]
         var_info_specific = [x for x in all_var_info if x["op_code"] == id]
         if var_info_specific:
             var_info_specific = var_info_specific[0]['var_name']
@@ -329,6 +331,7 @@ class Command():
             c8_data = "ALL ENNEMY"
         else:
             c8_data = self.info_stat_data_monster_name
+
         list_target_other = [c8_data,  # 0xC8
                              'RANDOM ENNEMY',  # 0xC9
                              'RANDOM ALLY',  # 0xCA

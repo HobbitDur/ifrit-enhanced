@@ -264,7 +264,7 @@ class Ennemy():
 
             self.info_stat_data[el['name']] = value
 
-    def __analyze_battle_script_section(self, game_data):
+    def __analyze_battle_script_section(self, game_data:GameData):
         SECTION_NUMBER = 8
         if len(self.header_data['section_pos']) <= SECTION_NUMBER:
             return
@@ -344,8 +344,8 @@ class Ennemy():
                     op_code_ref = op_code_ref[0]
                     start_param = index_read + 1
                     end_param = index_read + 1 + op_code_ref['size']
-                    command = Command(code[index_read], code[start_param:end_param], game_data, self.battle_script_data['battle_text'],
-                                      self.info_stat_data['monster_name'])
+                    command = Command(code[index_read], code[start_param:end_param], game_data=game_data, battle_text=self.battle_script_data['battle_text'],
+                                      info_stat_data_monster_name=self.info_stat_data['monster_name'], color=game_data.color)
                     list_result.append(command)
                     index_read += 1 + op_code_ref['size']
             self.battle_script_data['ai_data'].append(list_result)
