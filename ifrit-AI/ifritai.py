@@ -1,12 +1,14 @@
 import copy
 import os
+import pathlib
 
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtGui import QIcon, QFont, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QLabel, QFrame, QComboBox, QHBoxLayout, QFileDialog, \
-    QSpinBox, QGridLayout, QScrollArea, QSizePolicy, QStyle, QStyleFactory
+    QSpinBox, QGridLayout, QScrollArea, QSizePolicy, QStyle, QStyleFactory, QColorDialog
 
+from command import Command
 from ifritmanager import IfritManager
 
 
@@ -16,13 +18,12 @@ class IfritAI(QWidget):
     MAX_OP_ID = 61
     MAX_OP_CODE_VALUE = 255
     MIN_OP_CODE_VALUE = 0
-    AI_OFFSET_LIST = ['Init code', 'Enemy turn', 'Counter-attack', 'Death', 'Before dying or taking a hit']
+
 
 
     def __init__(self, icon_path='Resources'):
 
         QWidget.__init__(self)
-
         self.current_if_index = 0
         self.file_loaded = ""
         self.window_layout = QVBoxLayout()
@@ -37,7 +38,7 @@ class IfritAI(QWidget):
         # Main window
         self.setWindowTitle("IfritAI")
         self.setMinimumSize(1280, 720)
-        # self.setWindowIcon(QIcon(os.path.join(icon_path, 'icon.png')))
+        self.setWindowIcon(QIcon(os.path.join(icon_path, 'icon.ico')))
 
         self.save_button = QPushButton()
         self.save_button.setIcon(QIcon(os.path.join(icon_path, 'save.svg')))
@@ -59,39 +60,51 @@ class IfritAI(QWidget):
 
 
         self.script_section = QComboBox()
-        self.script_section.addItems(self.AI_OFFSET_LIST)
+        self.script_section.addItems(self.ifrit_manager.game_data.AI_SECTION_LIST)
         self.script_section.activated.connect(self.__section_change)
+
+        self.button_color_picker = QPushButton()
+        self.button_color_picker.setText('Color')
+        self.button_color_picker.clicked.connect(self.__select_color)
+
+        self.monster_name_label = QLabel()
+        self.monster_name_label.hide()
 
         self.layout_top = QHBoxLayout()
         self.layout_top.addWidget(self.file_dialog_button)
         self.layout_top.addWidget(self.save_button)
         self.layout_top.addWidget(self.reset_button)
         self.layout_top.addWidget(self.script_section)
+        self.layout_top.addWidget(self.button_color_picker)
+        self.layout_top.addWidget(self.monster_name_label)
         self.layout_top.addStretch(1)
 
         self.ai_layout = QVBoxLayout()
+        self.ai_layout.addStretch(1)
         self.all_lines_layout = []
+
+
 
         self.layout_title = QHBoxLayout()
 
-
-        self.add_line_button = [QPushButton()]
-        self.add_line_selector = [QComboBox()]
-        #self.__init_add_line()
-        self.add_line_layout = QHBoxLayout()
-        # self.add_line_layout.addWidget(self.add_line_button)
-        # self.add_line_layout.addWidget(self.add_line_selector)
-
         self.scroll_widget.setLayout(self.layout_main)
         self.layout_main.addLayout(self.layout_top)
-        self.layout_main.addLayout(self.layout_title)
+        #self.layout_main.addLayout(self.layout_title)
         self.layout_main.addLayout(self.ai_layout)
+        self.layout_main.addStretch(1)
         # self.layout_main.addLayout(self.add_line_layout)
 
         self.setLayout(self.window_layout)
 
-        self.__load_file()
         self.show()
+
+    def __select_color(self):
+        color = QColorDialog.getColor()
+        index_section = self.ifrit_manager.game_data.AI_SECTION_LIST.index(self.script_section.currentText())
+        for command in self.ifrit_manager.ai_data[index_section]:
+            command.set_color(color.name())
+            command.text_widget.setText(command.get_text())
+
 
     def __save_file(self):
         self.ifrit_manager.save_file(self.file_loaded)
@@ -100,13 +113,28 @@ class IfritAI(QWidget):
         self.__clear_lines()
         self.__setup_section_data()
 
-    def __init_add_line(self):
-        for i in range(len(self.add_line_button)):
-            self.add_line_button[i].setText("+")
-            #self.add_line_button[i].clicked.connect(lambda: self.__add_line(i))
-            self.add_line_selector[i].addItems(self.ADD_LINE_SELECTOR_ITEMS)
+    def __remove_line(self, command: Command):
+        self.current_if_index = 0
+        current_scroll_pos = self.scroll_area.verticalScrollBar().value()
+        index_section = self.ifrit_manager.game_data.AI_SECTION_LIST.index(self.script_section.currentText())
+        self.ifrit_manager.ai_data[index_section].remove(command)
+        self.__clear_lines()
+        self.__setup_section_data()
+        self.scroll_area.verticalScrollBar().setValue(current_scroll_pos)
 
-    def __add_line(self, command):
+
+    def __insert_line(self, command:Command):
+        self.current_if_index = 0
+        current_scroll_pos = self.scroll_area.verticalScrollBar().value()
+        index_section = self.ifrit_manager.game_data.AI_SECTION_LIST.index(self.script_section.currentText())
+        self.ifrit_manager.ai_data[index_section].insert(command.line_index, command)
+        self.__clear_lines()
+        self.__setup_section_data()
+        self.scroll_area.verticalScrollBar().setValue(current_scroll_pos)
+
+
+
+    def __add_line(self, command:Command):
         # First move the text if we got an END
         if command.get_id() == 35:
             self.current_if_index -=1
@@ -115,7 +143,26 @@ class IfritAI(QWidget):
         if len(self.all_lines_layout) <= command.line_index:
             for i in range(command.line_index + 1 - len(self.all_lines_layout)):
                 self.all_lines_layout.append(QHBoxLayout())
-                self.layout_main.addLayout(self.all_lines_layout[-1])
+                self.ai_layout.addLayout(self.all_lines_layout[-1])
+
+        # Add the + and - button
+        add_button = QPushButton()
+        add_button.setText("+")
+        add_button.setFixedSize(30, 30)
+        new_command = Command(0, [], self.ifrit_manager.game_data, line_index=command.line_index )
+        add_button.clicked.connect(lambda: self.__insert_line(new_command))
+
+        remove_button = QPushButton()
+        remove_button.setText("-")
+        remove_button.setFixedSize(30, 30)
+        remove_button.clicked.connect(lambda: self.__remove_line(command))
+
+
+        layout_button = QHBoxLayout()
+        layout_button.addWidget(add_button)
+        layout_button.addWidget(remove_button)
+
+        self.all_lines_layout[command.line_index].addLayout(layout_button)
 
         # Add the op_id widget
         command.op_id_widget = QSpinBox()
@@ -145,7 +192,7 @@ class IfritAI(QWidget):
             self.current_if_index += 1
 
 
-    def __set_text_layout(self, command):
+    def __set_text_layout(self, command:Command):
         # Create the text widget
         frame_text = QFrame()
         frame_text.setFrameStyle(0x05)
@@ -191,25 +238,23 @@ class IfritAI(QWidget):
         command.text_widget.setText(command.get_text())
 
     def __load_file(self, file_to_load=None):
-
-        # file_name = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat", directory=os.getcwd())[0]
-        # if file_name:
-        #    self.file_path = file_name
-        # self.ifrit_manager.init_from_file(file_name)
         if not file_to_load:
-            self.file_loaded = os.path.join("OriginalFiles", "c0m028.dat")
-        else:
+            file_to_load = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat", directory=os.getcwd())[0]
+        if file_to_load:
+            self.ifrit_manager.init_from_file(file_to_load)
+            self.monster_name_label.setText("Monster : {}, file: {}".format(self.ifrit_manager.ennemy.info_stat_data['monster_name'], pathlib.Path(file_to_load).name))
+            self.monster_name_label.show()
             self.file_loaded = file_to_load
-        self.ifrit_manager.init_from_file(self.file_loaded)
-        self.__clear_lines()
-        self.__setup_section_data()
+            self.__clear_lines()
+            self.__setup_section_data()
+
 
     def __reload_file(self):
         self.__load_file(self.file_loaded)
 
     def __setup_section_data(self):
         line_index = 1
-        index_section = self.AI_OFFSET_LIST.index(self.script_section.currentText())
+        index_section = self.ifrit_manager.game_data.AI_SECTION_LIST.index(self.script_section.currentText())
         for command in self.ifrit_manager.ai_data[index_section]:
             command.line_index = line_index
             self.__add_line(command)

@@ -2,9 +2,8 @@ from gamedata import GameData
 
 
 class Command():
-    PARAM_COLOR = "#8a1624"
 
-    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name=(), line_index = 0):
+    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name=(), line_index=0):
         self.__op_id = op_id
         self.__op_code = op_code
         self.__battle_text = battle_text
@@ -12,12 +11,17 @@ class Command():
         self.__text_colored = ""
         self.__game_data = game_data
         self.info_stat_data_monster_name = info_stat_data_monster_name
-        self.__analyse_op_data()
+        self.__color_param = "#8a1624"
         self.op_id_widget = None
         self.op_code_widget = []
         self.text_widget = None
         self.line_index = line_index
         self.if_index = 0
+        self.__analyse_op_data()
+        self.was_physical = False
+        self.was_magic = False
+        self.was_item = False
+        self.was_gforce = False
 
     def __str__(self):
         return f"ID: {self.__op_id}, op_code: {self.__op_code}, text: {self.__text}"
@@ -25,10 +29,14 @@ class Command():
     def __repr__(self):
         return self.__str__()
 
+    def set_color(self, color):
+        self.__color_param = color
+        self.__analyse_op_data()
+
     def set_op_id(self, op_id):
         self.__op_id = op_id
         op_info = self.__get_op_code_line_info()
-        self.__op_code = [0]* op_info["size"]
+        self.__op_code = [0] * op_info["size"]
         self.__analyse_op_data()
 
     def set_op_code(self, op_code):
@@ -54,8 +62,7 @@ class Command():
             op_research = [x for x in all_op_code_info if x["op_code"] == 255][0]
         return op_research
 
-    def __analyse_op_data(self,):
-
+    def __analyse_op_data(self):
         op_info = self.__get_op_code_line_info()
         # Searching for errors in json file
         if len(op_info["param_type"]) != op_info["size"] and op_info['complexity'] == 'simple':
@@ -68,7 +75,7 @@ class Command():
                     param_value.append(str(self.__op_code[op_index]))
                 elif type == "var":
                     # There is specific var known, if not in the list it means it's a generic one
-                    param_value.append("var"+self.__get_var_name(self.__op_code[op_index]))
+                    param_value.append(self.__get_var_name(self.__op_code[op_index]))
                 elif type == "special_action":
                     if self.__op_code[op_index] < len(self.__game_data.special_action):
                         param_value.append(self.__game_data.special_action[self.__op_code[op_index]]['name'])
@@ -100,18 +107,20 @@ class Command():
                     print("Unknown type, considering a int")
                     param_value.append(self.__op_code[op_index])
             for i in range(len(param_value)):
-                param_value[i] = '<span style="color:#8a1624;">' + param_value[i] + '</span>'
-            self.__text = op_info['text'].format(*param_value)
+                param_value[i] = '<span style="color:' + self.__color_param + ';">' + param_value[i] + '</span>'
+            self.__text = (op_info['text'] + " (size:{}bytes)").format(*param_value, op_info['size'] + 1)
         elif op_info["complexity"] == "complex":
             call_function = getattr(self, "_Command__op_" + "{:02X}".format(op_info["op_code"]) + "_analysis")
-            self.__text = call_function(self.__op_code)
+            call_result = call_function(self.__op_code)
+            self.__text = call_result[0].format(*['<span style="color:' + self.__color_param + ';">' + str(x) + '</span>' for x in call_result[1]])
+            self.__text += " (size:{}bytes)".format(op_info['size'] + 1)
 
     def __op_17_analysis(self, op_code):
         if op_code[0] > 0:
             ret = "DEACTIVATE RUN"
         else:
             ret = "ACTIVATE RUN"
-        return ret
+        return [ret, []]
 
     def __op_26_analysis(self, op_code):
         if op_code[3] < len(self.__game_data.status_ia_values):
@@ -121,17 +130,15 @@ class Command():
         if op_code[0] + op_code[2]:
             info = ''
         else:
-            info = " unknown <span style=\"color:#8a1624;\">{}</span>|<span style=\"color:#8a1624;\">{}</span>".format(op_code[0], op_code[2])
-        ret = "TARGET <span style=\"color:#8a1624;\">{}</span> WITH STATUS <span style=\"color:#8a1624;\">{}</span><span style=\"color:#8a1624;\">{}</span>".format(
-            self.__get_target(op_code[1], self.__game_data), status, info)
-        return ret
+            info = " unknown {}|{}".format(op_code[0], op_code[2])
+        ret = "TARGET {} WITH STATUS {}{}"
+        return [ret, [self.__get_target(op_code[1], self.__game_data), status, info]]
 
     def __op_18_analysis(self, op_code):
         ret = self.__op_01_analysis(op_code)
         if op_code[0] != 0:
-            ret += (''
-                    ' debug: <span style=\"color:#8a1624;\">{}</span>').format(str(op_code[0]))
-        return ret
+            ret[0] += 'debug: {}'
+        return [ret[0], ret[1]]
 
     def __op_28_analysis(self, op_code):
         if op_code[0] == 0:
@@ -150,10 +157,9 @@ class Command():
             aptitude = "Unknown aptitude"
 
         if op_code[1] == 10:
-            mod_change = "REINIT <span style=\"color:#8a1624;\">{}</span> TO BASE VALUE".format(aptitude)
+            return ["REINIT {} TO BASE VALUE", [aptitude]]
         else:
-            mod_change = "MULTIPLY <span style=\"color:#8a1624;\">{}</span> BY <span style=\"color:#8a1624;\">{}</span>".format(aptitude, op_code[1] / 10)
-        return mod_change
+            return ["MULTIPLY {} BY {}", [aptitude, op_code[1] / 10]]
 
     def __op_23_analysis(self, op_code):
         jump = int.from_bytes(bytearray([op_code[0], op_code[1]]), byteorder='little')
@@ -161,7 +167,7 @@ class Command():
             text = 'ENDIF'
         else:
             text = 'ELSE'
-        return text
+        return [text, []]
 
     def __op_2D_analysis(self, op_code):
         # op_2D = ['element', 'elementval', '?']
@@ -171,19 +177,21 @@ class Command():
             element = "UNKNOWN ELEMENT TYPE"
         element_val = op_code[1]
         op_code_unknown = op_code[2]
-        return 'Resist element <span style=\"color:#8a1624;\">{}</span> at <span style=\"color:#8a1624;\">{}</span>'.format(element, element_val)
+        return ['Resist element {} at {}', [element, element_val]]
 
     def __op_1A_analysis(self, op_code):
         analysis = self.__op_01_analysis(op_code)
-        analysis += 'LOCK BATTLE'
+        analysis[0] += 'LOCK BATTLE'
         return analysis
 
     def __op_01_analysis(self, op_code):
         if op_code[0] < len(self.__battle_text):
-            ret = 'SHOW BATTLE TEXT: <span style=\"color:#8a1624;\">{}</span>'.format(self.__battle_text[op_code[0]])
+            ret = 'SHOW BATTLE TEXT: {}'
+            param_return = [self.__battle_text[op_code[0]]]
         else:
             ret = "/!\\SHOW BATTLE BUT NO BATTLE TO SHOW"
-        return ret
+            param_return = []
+        return [ret, param_return]
 
     def __op_02_analysis(self, op_code):
         # op_02 = ['subject_id', 'target', 'comparator', 'value', 'debug']
@@ -192,39 +200,39 @@ class Command():
         target_reverse = self.__get_target(op_code[1], self.__game_data, True)
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
-        op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
+        op_code_jump = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
         if op_code_comparator < len(self.__game_data.ai_data_json['list_comparator']):
             comparator = self.__game_data.ai_data_json['list_comparator'][op_code_comparator]
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
-            left_subject = {'text': 'HP of <span style=\"color:#8a1624;\">{}</span>'.format(target), 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span> %', 'param': [op_code_value * 10]}
+            left_subject = {'text': 'HP of {}'.format(target), 'param': [target]}
+            right_subject = {'text': '{} %', 'param': [op_code_value * 10]}
         elif subject_id == 1:
-            left_subject = {'text': 'HP of <span style=\"color:#8a1624;\">{}</span>'.format(target), 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span> %', 'param': [op_code_value * 10]}
+            left_subject = {'text': 'HP of {}'.format(target), 'param': [target]}
+            right_subject = {'text': '{} %', 'param': [op_code_value * 10]}
         elif subject_id == 2:
-            left_subject = {'text': 'RANDOM VALUE BETWEEN 0 AND <span style=\"color:#8a1624;\">{}</span>', 'param': [op_code[1]]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': 'RANDOM VALUE BETWEEN 0 AND {}', 'param': [op_code[1]]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 3:
             left_subject = {'text': 'Combat scene', 'param': []}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 4:
-            left_subject = {'text': 'STATUS OF <span style=\"color:#8a1624;\">{}</span>', 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
+            left_subject = {'text': 'STATUS OF {}', 'param': [target]}
+            right_subject = {'text': '{}', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
         elif subject_id == 5:
-            left_subject = {'text': 'STATUS OF <span style=\"color:#8a1624;\">{}</span>', 'param': [target_reverse]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
+            left_subject = {'text': 'STATUS OF {}', 'param': [target_reverse]}
+            right_subject = {'text': '{}', 'param': [self.__game_data.status_ia_values[op_code_value]['name']]}
         elif subject_id == 6:
-            left_subject = {'text': 'NUMBER OF MEMBER OF <span style=\"color:#8a1624;\">{}</span>', 'param': [target_reverse]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': 'NUMBER OF MEMBER OF {}', 'param': [target_reverse]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 9:
-            left_subject = {'text': "<span style=\"color:#8a1624;\">{}</span>", 'param': [self.__get_target(op_code[3], self.__game_data)]}
+            left_subject = {'text': "{}", 'param': [self.__get_target(op_code[3], self.__game_data)]}
             right_subject = {'text': 'ALIVE', 'param': []}
         elif subject_id == 10:
             if op_code[1] == 0:
                 attack_condition = "ATTACKER WAS TEAM MEMBER N°"
-                attack_type = op_code_value
+                attack_type = str(op_code_value)
             elif op_code[1] == 1:
                 attack_condition = "ATTACKER IS"
                 attack_type = target
@@ -243,7 +251,7 @@ class Command():
                     attack_type = "G-Force"
                     self.was_force = True
                 else:
-                    attack_type = "Unknown <span style=\"color:#8a1624;\">{}</span>"
+                    attack_type = "Unknown {}".format(op_code_value)
             elif op_code[1] == 4:
                 if op_code_value >= 64:
                     attack_condition = "LAST GFORCE LAUNCH WAS"
@@ -256,7 +264,7 @@ class Command():
                     elif self.was_physical:
                         ret = self.__game_data.special_action[op_code_value]['name']
                     else:
-                        ret = op_code_value
+                        ret = str(op_code_value)
                     attack_condition = "LAST ACTION LAUNCH WAS"
                     attack_type = ret
                     self.was_magic = False
@@ -264,45 +272,47 @@ class Command():
                     self.was_physical = False
             elif op_code[1] == 5:
                 attack_condition = "Last attack was of element"
-                attack_type = self.__game_data.magic_type_values[op_code_value]
+                attack_type = str(self.__game_data.magic_type_values[op_code_value])
             else:
-                attack_condition = "Unknown last attack <span style=\"color:#8a1624;\">{}</span>"
-                attack_type = "Unknown attack type <span style=\"color:#8a1624;\">{}</span>"
-            left_subject = {'text': attack_condition, 'param': [op_code[1]]}
-            right_subject = {'text': attack_type, 'param': [op_code_value]}
+                attack_condition = "Unknown last attack {}".format(op_code[1])
+                attack_type = "Unknown attack type {}".format(op_code_value)
+            left_subject = {'text': attack_condition, 'param': []}
+            right_subject = {'text': attack_type, 'param': []}
         elif subject_id == 14:
-            left_subject = {'text': "Group level <span style=\"color:#8a1624;\">{}</span>", 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': "Group level {}", 'param': [target]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 15:
-            left_subject = {'text': "<span style=\"color:#8a1624;\">{}</span> CAN ATTACK WITH HIS ALLY", 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': "{} CAN ATTACK WITH HIS ALLY", 'param': [target]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 17:
-            left_subject = {'text': "GFORCE STOLEN (TARGET: <span style=\"color:#8a1624;\">{}</span>)", 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': "GFORCE STOLEN (TARGET: {})", 'param': [target]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 18:
             left_subject = {'text': "Odin attaque ?", 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 19:
             left_subject = {'text': "COUNTDOWN", 'param': [target]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id <= 19:
             left_subject = {'text': 'UNKNOWN SUBJECT', 'param': []}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         else:
-            left_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [self.__get_var_name(subject_id)]}
-            right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
+            left_subject = {'text': '{}', 'param': [self.__get_var_name(subject_id)]}
+            right_subject = {'text': '{}', 'param': [op_code_value]}
         left_subject = left_subject['text'].format(*left_subject['param'])
         right_subject = right_subject['text'].format(*right_subject['param'])
-
-        return f"IF - Subject ID: <span style=\"color:#8a1624;\">{subject_id}</span>,{left_subject} {comparator} {right_subject}, Jump <span style=\"color:#8a1624;\">{op_code_debug}</span> bytes forward, Debug: <span style=\"color:#8a1624;\">{op_code[4]}</span>"
+        if op_code[4] != 0:
+            return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward | Debug: {}",
+                    [left_subject, comparator, right_subject, subject_id, op_code_jump, op_code[4]]]
+        else:
+            return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward", [left_subject, comparator, right_subject, subject_id, op_code_jump]]
 
     def __op_27_analysis(self, op_code):
         if op_code[0] == 23:
             ret = 'auto-boomerang'
         else:
-            ret = "unknown flag <span style=\"color:#8a1624;\">{}</span>".format(op_code[0])
-        return 'MAKE <span style=\"color:#8a1624;\">{}</span> of <span style=\"color:#8a1624;\">{}</span> to <span style=\"color:#8a1624;\">{}</span>'.format(
-            ret, self.info_stat_data_monster_name, op_code[1])
+            ret = "unknown flag {}".format(op_code[0])
+        return ['MAKE {} of {} to {}', [ret, self.info_stat_data_monster_name, op_code[1]]]
 
     def __get_var_name(self, id):
         # There is specific var known, if not in the list it means it's a generic one
@@ -311,7 +321,7 @@ class Command():
         if var_info_specific:
             var_info_specific = var_info_specific[0]['var_name']
         else:
-            var_info_specific = str(id)
+            var_info_specific = "var" + str(id)
         return var_info_specific
 
     def __get_target(self, id, game_data: GameData, reverse=False):

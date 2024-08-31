@@ -515,14 +515,13 @@ class Ennemy():
             end_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
             death_code = list(self.file_raw_data[start_data:end_data])
             start_data = ai_offset + self.battle_script_data['offset_before_dying_or_hit']
-            end_data = ai_offset + self.battle_script_data['offset_text_offset']
+            end_data = section_offset + self.battle_script_data['offset_text_offset']
             before_dying_or_hit_code = list(self.file_raw_data[start_data:end_data])
             list_code = [init_code, ennemy_turn_code, counterattack_code, death_code, before_dying_or_hit_code]
             self.battle_script_data['ia_data'] = []
             for index, code in enumerate(list_code):
                 first_index_0 = 0
                 list_bracket = [0] * 10
-                last_stop = False
                 index_read = 0
                 list_result = []
                 while index_read < len(code):
@@ -565,16 +564,8 @@ class Ennemy():
                                     list_result.append(ret)
                         # END Managing END
                     else:
-                        result = [code[index_read]]  # Reading ID
                         index_read += 1
                         game_data.unknown_result.append(self.info_stat_data['monster_name'])
-                    # Check if double stop
-                    if result['id'] == 0x00 and last_stop:
-                        break
-                    elif result['id'] == 0x00:
-                        last_stop = True
-                    else:
-                        last_stop = False
                 list_result = self.__remove_stop_end(list_result)
                 self.battle_script_data['ia_data'].append(list_result)
             self.battle_script_data['ia_data'].append([])  # Adding a end section that is empty to mark the end of the all IA section
@@ -850,7 +841,7 @@ class Ennemy():
         target = self.__get_target(op_code[1], game_data)
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
-        op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
+        op_code_jump = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
         if op_code_comparator < len(self.list_comparator):
             comparator = self.list_comparator[op_code_comparator]
         else:
@@ -950,7 +941,7 @@ class Ennemy():
             left_subject = {'text': '{}'.format(self.__get_var_name(subject_id)), 'param': [self.__get_var_name(subject_id)]}
             right_subject = {'text': '{}'.format(op_code_value), 'param': [op_code_value]}
         return {'if_text': 'IF', 'subject_id': subject_id, 'left_subject': left_subject, 'comparator': comparator, 'right_subject': right_subject,
-                'then_text': 'THEN', 'left_param': [op_code[1]], 'right_param': [op_code_value], 'jump': [op_code_debug], 'debug': op_code[4]}
+                'then_text': 'THEN', 'left_param': [op_code[1]], 'right_param': [op_code_value], 'jump': [op_code_jump], 'debug': op_code[4]}
 
     def __op_04_analysis(self, op_code, game_data):
         return {'text': 'TARGET {}'.format(self.__get_target(op_code[0], game_data)), 'param': [op_code[0]]}
