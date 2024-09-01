@@ -48,6 +48,9 @@ jobs:
           name: ifrit-enhanced-*.zip
           path: ${{ github.workspace }}/release
   test:
+    needs:
+    - install_python_dependencies
+    - create_assets
     runs-on: ubuntu-latest
     steps:
       - name: testprint
