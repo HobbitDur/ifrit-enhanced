@@ -29,6 +29,7 @@ jobs:
           pip install pyinstaller
           python --version
           pip freeze
+      - uses: milliewalky/setup-7-zip@v1
       - name: Create xlsx release
         shell: bash
         run: |
@@ -51,7 +52,7 @@ jobs:
           rm -r release/build
           ls -al
           cd ..
-      - name: Create full release first part
+      - name: Create full release
         shell: bash
         run: |
           ls -al
@@ -65,13 +66,7 @@ jobs:
           rm -rf ifrit-ai/release
           rm -rf ifrit-xlsx/release
           cd release/ifrit-enhanced-0.x
-      - uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -tzip ../ifrit-enhanced-0.x.zip .
-      - name: Create full release last part
-        shell: bash
-        run: |
-          cd ..
+          7z a -tzip ../ifrit-enhanced-0.x.zip .
           rm -r ifrit-enhanced-0.x
           ls -al
       - name: Upload artifact
