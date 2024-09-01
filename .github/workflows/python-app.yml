@@ -73,16 +73,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ifrit-enhanced-*.zip
+          name: ifrit-enhanced-${GITHUB_SHA::7}.zip
           path: ${{ github.workspace }}/release
-  test:
-    needs:
-    - create_assets
-    runs-on: windows-latest
-    steps:
-      - name: testprint
-        run: |
-          echo "[LS]: $(ls -al)"
   release_assets:
     name: Release
     needs:
@@ -92,7 +84,6 @@ jobs:
     steps:
     - name: Download Files
       uses: actions/download-artifact@v4
-
     - name: Deploy Package
       if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
       uses: crowbarmaster/GH-Automatic-Releases@latest
