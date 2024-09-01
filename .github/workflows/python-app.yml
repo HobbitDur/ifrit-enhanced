@@ -49,7 +49,7 @@ jobs:
           cp -r Resources/ release/
           cp -r OriginalFiles/ release/
           rm -r release/build
-          ls-al
+          ls -al
           cd ..
       - name: Create full release
         shell: bash
