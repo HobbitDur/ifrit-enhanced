@@ -8,7 +8,6 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  workflow_dispatch:
 
 jobs:
   create_assets:
@@ -53,17 +52,17 @@ jobs:
         shell: bash
         run: |
           ls -al
-          mkdir -p release/ifrit-enhanced-0.x
-          mkdir -p release/ifrit-enhanced-0.x/ifrit-gui
-          mkdir -p release/ifrit-enhanced-0.x/ifrit-ai
-          mkdir -p release/ifrit-enhanced-0.x/ifrit-xlsx
+          mkdir -p release/ifrit-enhanced${{ github.event.ref }}
+          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-gui
+          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-ai
+          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-xlsx
           cp -R ifrit-ai/release/* release/ifrit-enhanced-0.x/ifrit-ai/
           cp -R ifrit-xlsx/release/* release/ifrit-enhanced-0.x/ifrit-xlsx/
           cp -R ifrit-gui/publish/* release/ifrit-enhanced-0.x/ifrit-gui/
           rm -rf ifrit-ai/release
           rm -rf ifrit-xlsx/release
-          cd release/ifrit-enhanced-0.x
-          7z  a -tzip ../ifrit-enhanced-0.x.zip .
+          cd release/ifrit-enhanced${{ github.event.ref }}
+          7z  a -tzip ../ifrit-enhanced${{ github.event.ref }}.zip .
           cd ..
           rm -r ifrit-enhanced-0.x
           ls -al
@@ -93,5 +92,14 @@ jobs:
         automatic_release_tag: "continuous"
         prerelease: true
         title: "Unstable Build"
+        files: |
+          artifact-*/*
+    - name: Deploy Package
+      if: github.event.ref_type == 'tag'
+      uses: crowbarmaster/GH-Automatic-Releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        title: ${{ github.event.ref }}
         files: |
           artifact-*/*
