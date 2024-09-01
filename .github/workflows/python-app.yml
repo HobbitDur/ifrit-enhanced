@@ -69,8 +69,8 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          ls -al ${{ github.workspace }}
-          ls -al ${{ github.workspace }}/release
+          ls -al "${{ github.workspace }}"
+          ls -al "${{ github.workspace }}/release"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
