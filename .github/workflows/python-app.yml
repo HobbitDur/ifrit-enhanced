@@ -64,6 +64,10 @@ jobs:
       - name: zip name tag
         if: github.event.ref_type == 'tag'
         run: 7z  a -tzip ../ifrit-enhanced${{  github.ref_name }}.zip .  
+      - name: Test
+        run: |
+          ls -al ${{ github.workspace }}
+          ls -al ${{ github.workspace }}/release
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
