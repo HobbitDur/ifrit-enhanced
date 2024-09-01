@@ -52,7 +52,8 @@ jobs:
         shell: bash
         run: |
           ls -al
-          mkdir -p release/ifrit-enhanced${{ github.event.ref }}
+          mkdir -p release/ifrit-enhanced${{ github.event.release.tag_name }}
+          ls -al release
           mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-gui
           mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-ai
           mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-xlsx
