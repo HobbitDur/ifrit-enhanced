@@ -47,6 +47,12 @@ jobs:
         with:
           name: ifrit-enhanced-*.zip
           path: ${{ github.workspace }}/release
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: testprint
+        run: |
+          echo "[LS]: $(ls -al)"
   release_assets:
     name: Release
     needs:
