@@ -71,11 +71,9 @@ jobs:
           rm -r ifrit-enhanced-0.x
           ls -al
       - name: Upload artifact
-        env:
-          SHA8: ${GITHUB_SHA::8}
         uses: actions/upload-artifact@v4
         with:
-          name: ifrit-enhanced-$SHA8.zip
+          name: ifrit-enhanced-$${{ github.sha[0:7] }}.zip
           path: ${{ github.workspace }}/release
   release_assets:
     name: Release
