@@ -48,9 +48,7 @@ jobs:
       - name: Create full release - Start
         shell: bash
         run: |
-          ls -al
           mkdir -p release/ifrit-enhanced
-          ls -al release
           mkdir -p release/ifrit-enhanced/ifrit-gui
           mkdir -p release/ifrit-enhanced/ifrit-ai
           mkdir -p release/ifrit-enhanced/ifrit-xlsx
@@ -70,6 +68,10 @@ jobs:
         shell: bash
         run: |
           cd ..
+          rm -r ifrit-enhanced
+          cd ..
+          ls -al
+          ls -al release/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
