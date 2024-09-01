@@ -67,16 +67,14 @@ jobs:
       - name: Create full release - End
         shell: bash
         run: |
-          cd ..
-          rm -r ifrit-enhanced
-          cd ..
+          cd ../..
           ls -al
           ls -al release/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "artifact-${{ github.sha }}"
-          path: ${{ github.workspace }}/release/*
+          path: ${{ github.workspace }}/release/ifrit-enhanced*.zip
   release_assets:
     name: Release
     needs:
