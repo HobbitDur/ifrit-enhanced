@@ -1,0 +1,70 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install_python_dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Lint with Ruff
+      run: |
+        pip install ruff
+        ruff check --output-format=github .
+      continue-on-error: true
+    
+
+  create_assets:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      - name: Create package
+        run: |
+           chmod +x ./create_release.sh
+           ./create_release.sh
+        shell: bash
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-test
+          path: ${{ github.workspace }}/release
+  release_assets:
+    name: Release
+    needs:
+    - install_python_dependencies
+    - create_assets
+    concurrency: release-${{ github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Files
+      uses: actions/download-artifact@v4
+
+    - name: Deploy Package
+      if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
+      uses: crowbarmaster/GH-Automatic-Releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "continuous"
+        prerelease: true
+        title: "Unstable Build"
+        files: |
+          artifact-*/*
