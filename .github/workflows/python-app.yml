@@ -62,7 +62,7 @@ jobs:
         if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
         run: |
           cd release/ifrit-enhanced
-          7z  a -tzip "../ifrit-enhanced-continuous.zip" .
+          7z  a -tzip "../ifrit-enhanced-continuous-${{  github.sha }}.zip" .
           pwd
       - name: zip name tag
         shell: bash
