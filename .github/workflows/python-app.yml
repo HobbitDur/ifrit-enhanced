@@ -65,12 +65,16 @@ jobs:
           cp -R ifrit-gui/publish/* release/ifrit-enhanced-0.x/ifrit-gui/
           rm -rf ifrit-ai/release
           rm -rf ifrit-xlsx/release
+          cd release/ifrit-enhanced-0.x
+          "7z -tzip ../ifrit-enhanced-0.x.zip .
+          cd ..
+          rm -r ifrit-enhanced-0.x
           ls -al
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "ifrit-enhanced-${{ github.sha }}"
-          path: ${{ github.workspace }}/release/ifrit-enhanced*/
+          name: "artifact-${{ github.sha }}"
+          path: ${{ github.workspace }}/release/ifrit-enhanced*/*
   release_assets:
     name: Release
     needs:
@@ -93,4 +97,4 @@ jobs:
         prerelease: true
         title: "Unstable Build"
         files: |
-          */*
+          artifact-*/*
