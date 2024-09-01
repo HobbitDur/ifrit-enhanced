@@ -67,6 +67,7 @@ jobs:
           rm -rf ifrit-xlsx/release
           cd release/ifrit-enhanced-0.x
           7z a -tzip ../ifrit-enhanced-0.x.zip .
+          cd ..
           rm -r ifrit-enhanced-0.x
           ls -al
       - name: Upload artifact
