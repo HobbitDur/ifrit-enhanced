@@ -40,6 +40,7 @@ jobs:
       - name: Create xlsx release
         shell: bash
         run: |
+          ls -al
           cd ifrit-xlsx/
           pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
