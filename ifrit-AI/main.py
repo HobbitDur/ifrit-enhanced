@@ -1,8 +1,6 @@
-import argparse
-import faulthandler
-import os
 import sys
-from PyQt6.QtWidgets import QApplication, QStyleFactory
+
+from PyQt6.QtWidgets import QApplication
 
 from ifritai import IfritAI
 

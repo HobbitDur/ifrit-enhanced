@@ -10,3 +10,4 @@
 **/ifrit-gui/Properties/
 **/ifrit-gui/Ifrit.csproj.user
 **/ifrit-gui/.vs/
+*.sh
