@@ -7,8 +7,8 @@ from ifritai import IfritAI
 sys._excepthook = sys.excepthook
 def exception_hook(exctype, value, traceback):
     print(exctype, value, traceback)
-    sys._excepthook(exctype, value, traceback)
-    sys.exit(1)
+    sys.__excepthook__(exctype, value, traceback)
+    #sys.exit(1)
 
 if __name__ == '__main__':
     sys.excepthook = exception_hook
