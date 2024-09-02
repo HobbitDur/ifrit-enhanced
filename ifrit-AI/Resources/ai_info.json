@@ -4,17 +4,27 @@
   {"op_code": 81, "var_name": "TomberryDefeated"},
   {"op_code": 82, "var_name": "TomberrySrIsDefeated"},
   {"op_code": 83, "var_name": "UfoIsDefeated"},
-  {"op_code": 84, "var_name": "FirstBugSeen"},
+  {"op_code": 84, "var_name": "FirstBugSeen [savemap]"},
   {"op_code": 85, "var_name": "FirstBombSeen"},
   {"op_code": 86, "var_name": "FirstT-RexaurSeen"},
   {"op_code": 87, "var_name": "LimitBreakIrvine"},
   {"op_code": 96, "var_name": "SetupRandomness96"},
   {"op_code": 97, "var_name": "SetupRandomness97"},
   {"op_code": 98, "var_name": "SetupRandomness98"},
-  {"op_code": 99, "var_name": "SetupRandomness99"}
-  ],
+  {"op_code": 102, "var_name": "FirstBugSeen [global]"},
+  {"op_code": 220, "var_name": "varA"},
+  {"op_code": 221, "var_name": "varB"},
+  {"op_code": 222, "var_name": "varC"},
+  {"op_code": 223, "var_name": "varD"},
+  {"op_code": 224, "var_name": "varE"},
+  {"op_code": 225, "var_name": "varF"},
+  {"op_code": 226, "var_name": "varG"},
+  {"op_code": 227, "var_name": "varH"},
+  {"op_code": 228, "var_name": "varI"}
+],
 "list_target_char": ["Squall", "Zell", "Irvine", "Quistis", "Rinoa", "Selphie", "Seifer", "Edea", "Laguna", "Kiros", "Ward"],
-"list_comparator": ["==", "&lt;", "&gt;", "≠", "≤", "≥"],
+"list_comparator_html": ["==", "&lt;", "&gt;", "≠", "≤", "≥"],
+"list_comparator": ["==", "<", ">", "≠", "≤", "≥"],
 "op_code_info":[
     {"op_code": 0, "size": 0, "text": "STOP", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Stop"},
     {"op_code": 1, "size": 1, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Show battle text"},
@@ -71,9 +81,32 @@
     {"op_code": 57, "size": 0, "text": "GAME OVER", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Game over"},
     {"op_code": 58, "size": 1, "text": "UNKNOWN ACTION {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Unknown seifer and ultimecia 126"},
     {"op_code": 59, "size": 2, "text": "UNKNOWN ACTION {}|{}", "param_index": [0,1], "complexity": "simple", "param_type":  ["int", "int"], "param_list":  [], "comment":  "Unknown (ultimecia 124)"},
-    {"op_code": 60, "size": 1, "text": "Increase Max HP (but not current) by {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Increase Max HP"},
+    {"op_code": 60, "size": 1, "text": "INCREASE MAX HP (but not current) BY {}", "param_index": [0], "complexity": "simple", "param_type":  ["int"], "param_list":  [], "comment":  "Increase Max HP"},
     {"op_code": 61, "size": 0, "text": "UNKNOWN ACTION", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown Minotaure"},
     {"op_code": 65, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown goliath (unused ?)"},
     {"op_code": 255, "size": 0, "text": "UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Default unused when op_id doesn't exist"}
-]
+],
+ "if_subject":[
+   {"subject_id": 0, "text": "HP OF"},
+   {"subject_id": 1, "text": "HP OF"},
+   {"subject_id": 2, "text": "RANDOM VALUE"},
+   {"subject_id": 3, "text": "COMBAT SCENE"},
+   {"subject_id": 4, "text": "STATUS OF"},
+   {"subject_id": 5, "text": "STATUS OF [ALL]"},
+   {"subject_id": 6, "text": "NUMBER OF MEMBER"},
+   {"subject_id": 9, "text": "ALIVE"},
+   {"subject_id": 10, "text": "ATTACK"},
+   {"subject_id": 14, "text": "GROUP LEVEL"},
+   {"subject_id": 15, "text": "ATTACK WITH ALLY"},
+   {"subject_id": 17, "text": "STOLE GFORCE"},
+   {"subject_id": 18, "text": "ODIN ATTACK ?"},
+   {"subject_id": 19, "text": "COUNTDOWN"}
+  ],
+   "subject_left_10":[
+   {"subject_id": 0, "text": "ATTACKER WAS TEAM MEMBER N°"},
+   {"subject_id": 1, "text": "ATTACKER IS"},
+   {"subject_id": 3, "text": "LAST ATTACKER WAS OF TYPE"},
+   {"subject_id": 4, "text": ["LAST GFORCE LAUNCH WAS","LAST ACTION LAUNCH WAS"]},
+   {"subject_id": 5, "text": "LAST ATTACK WAS OF ELEMENT"}
+  ]
 }

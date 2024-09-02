@@ -3,7 +3,8 @@ from gamedata import GameData
 
 class Command():
 
-    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name="", line_index=0, color="#0055ff"):
+    def __init__(self, op_id: int, op_code: list, game_data: GameData, battle_text=(), info_stat_data_monster_name="",
+                 line_index=0, color="#0055ff"):
         self.__op_id = op_id
         self.__op_code = op_code
         self.__battle_text = battle_text
@@ -18,6 +19,8 @@ class Command():
         self.was_magic = False
         self.was_item = False
         self.was_gforce = False
+        self.type_data = []
+        self.param_possible_list = []
         self.__analyse_op_data()
 
     def __str__(self):
@@ -63,6 +66,7 @@ class Command():
         return op_research
 
     def __analyse_op_data(self):
+        self.param_possible_list = []
         op_info = self.__get_op_code_line_info()
         # Searching for errors in json file
         if len(op_info["param_type"]) != op_info["size"] and op_info['complexity'] == 'simple':
@@ -71,11 +75,17 @@ class Command():
             param_value = []
             for index, type in enumerate(op_info["param_type"]):
                 op_index = op_info["param_index"][index]
+                self.type_data.append(type)
                 if type == "int":
                     param_value.append(str(self.__op_code[op_index]))
+                    self.param_possible_list.append([])
                 elif type == "var":
                     # There is specific var known, if not in the list it means it's a generic one
                     param_value.append(self.__get_var_name(self.__op_code[op_index]))
+                    param_list = [{"id": x['op_code'], "data": x['var_name']} for x in
+                                  self.game_data.ai_data_json["list_var"]]
+                    self.param_possible_list.append(param_list)
+                    print("Adding possible list !")
                 elif type == "special_action":
                     if self.__op_code[op_index] < len(self.game_data.special_action):
                         param_value.append(self.game_data.special_action[self.__op_code[op_index]]['name'])
@@ -112,7 +122,8 @@ class Command():
         elif op_info["complexity"] == "complex":
             call_function = getattr(self, "_Command__op_" + "{:02X}".format(op_info["op_code"]) + "_analysis")
             call_result = call_function(self.__op_code)
-            self.__text = call_result[0].format(*['<span style="color:' + self.__color_param + ';">' + str(x) + '</span>' for x in call_result[1]])
+            self.__text = call_result[0].format(
+                *['<span style="color:' + self.__color_param + ';">' + str(x) + '</span>' for x in call_result[1]])
             self.__text += " (size:{}bytes)".format(op_info['size'] + 1)
 
     def __op_17_analysis(self, op_code):
@@ -202,8 +213,8 @@ class Command():
         op_code_comparator = op_code[2]
         op_code_value = op_code[3]
         op_code_jump = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
-        if op_code_comparator < len(self.game_data.ai_data_json['list_comparator']):
-            comparator = self.game_data.ai_data_json['list_comparator'][op_code_comparator]
+        if op_code_comparator < len(self.game_data.ai_data_json['list_comparator_html']):
+            comparator = self.game_data.ai_data_json['list_comparator_html'][op_code_comparator]
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
@@ -216,7 +227,7 @@ class Command():
             left_subject = {'text': 'RANDOM VALUE BETWEEN 0 AND {}', 'param': [op_code[1]]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 3:
-            left_subject = {'text': 'Combat scene', 'param': []}
+            left_subject = {'text': 'COMBAT SCENE', 'param': []}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 4:
             left_subject = {'text': 'STATUS OF {}', 'param': [target]}
@@ -231,32 +242,40 @@ class Command():
             left_subject = {'text': "{}", 'param': [self.__get_target(op_code[3], self.game_data)]}
             right_subject = {'text': 'ALIVE', 'param': []}
         elif subject_id == 10:
+            attack_left_text = "{}"
+            attack_left_condition_param = [str(op_code[1])]
+            attack_right_text = "{}"
+            attack_right_condition_param = [str(op_code[3])]
+            subject_left_data = [x['text'] for x in  self.game_data.ai_data_json['subject_left_10'] if x['subject_id'] == op_code[1] ]
+            print("SUBJECT")
+            print(subject_left_data)
+            if not subject_left_data:
+                attack_left_text = "Unknown last attack {}"
+            else:
+                attack_left_condition_param = subject_left_data
             if op_code[1] == 0:
-                attack_condition = "ATTACKER WAS TEAM MEMBER N°"
-                attack_type = str(op_code_value)
+                attack_right_condition_param = [str(op_code[3])]
             elif op_code[1] == 1:
-                attack_condition = "ATTACKER IS"
-                attack_type = target
+                attack_right_condition_param = [target]
             elif op_code[1] == 3:
-                attack_condition = "Last attack was of type"
                 if op_code_value == 1:
-                    attack_type = "Physical damage"
+                    attack_right_condition_param = ["Physical damage"]
                     self.was_physical = True
                 elif op_code_value == 2:
-                    attack_type = "Magical damage"
+                    attack_right_condition_param = ["Magical damage"]
                     self.was_magic = True
                 elif op_code_value == 4:
-                    attack_type = "Item"
+                    attack_right_condition_param = ["Item"]
                     self.was_item = True
                 elif op_code_value == 254:
-                    attack_type = "G-Force"
+                    attack_right_condition_param = ["G-Force"]
                     self.was_force = True
                 else:
-                    attack_type = "Unknown {}".format(op_code_value)
+                    attack_right_condition_param = ["Unknown {}".format(op_code_value)]
             elif op_code[1] == 4:
                 if op_code_value >= 64:
-                    attack_condition = "LAST GFORCE LAUNCH WAS"
-                    attack_type = self.game_data.gforce_values[op_code_value - 64]
+                    attack_left_condition_param = [attack_left_condition_param[0][0]]
+                    attack_right_condition_param = [self.game_data.gforce_values[op_code_value - 64]]
                 else:
                     if self.was_magic:
                         ret = self.game_data.magic_values[op_code_value]['name']
@@ -266,21 +285,21 @@ class Command():
                         ret = self.game_data.special_action[op_code_value]['name']
                     else:
                         ret = str(op_code_value)
-                    attack_condition = "LAST ACTION LAUNCH WAS"
-                    attack_type = ret
+                    attack_left_condition_param = [attack_left_condition_param[0][1]]
+                    attack_right_condition_param = [ret]
                     self.was_magic = False
                     self.was_item = False
                     self.was_physical = False
             elif op_code[1] == 5:
-                attack_condition = "Last attack was of element"
-                attack_type = str(self.game_data.magic_type_values[op_code_value])
+                attack_right_condition_param = [str(self.game_data.magic_type_values[op_code_value])]
             else:
-                attack_condition = "Unknown last attack {}".format(op_code[1])
-                attack_type = "Unknown attack type {}".format(op_code_value)
-            left_subject = {'text': attack_condition, 'param': []}
-            right_subject = {'text': attack_type, 'param': []}
+                attack_left_text = "Unknown attack type {}"
+                attack_right_condition_param = [op_code_value]
+
+            left_subject = {'text': attack_left_text, 'param': attack_left_condition_param}
+            right_subject = {'text': attack_right_text, 'param': attack_right_condition_param}
         elif subject_id == 14:
-            left_subject = {'text': "Group level {}", 'param': [target]}
+            left_subject = {'text': "GROUP LEVEL {}", 'param': [target]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 15:
             left_subject = {'text': "{} CAN ATTACK WITH HIS ALLY", 'param': [target]}
@@ -289,10 +308,10 @@ class Command():
             left_subject = {'text': "GFORCE STOLEN (TARGET: {})", 'param': [target]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 18:
-            left_subject = {'text': "Odin attaque ?", 'param': [target]}
+            left_subject = {'text': "ODIN ATTACK TO TARGET {}", 'param': [target]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id == 19:
-            left_subject = {'text': "COUNTDOWN", 'param': [target]}
+            left_subject = {'text': "COUNTDOWN", 'param': []}
             right_subject = {'text': '{}', 'param': [op_code_value]}
         elif subject_id <= 19:
             left_subject = {'text': 'UNKNOWN SUBJECT', 'param': []}
@@ -300,13 +319,35 @@ class Command():
         else:
             left_subject = {'text': '{}', 'param': [self.__get_var_name(subject_id)]}
             right_subject = {'text': '{}', 'param': [op_code_value]}
-        left_subject = left_subject['text'].format(*left_subject['param'])
-        right_subject = right_subject['text'].format(*right_subject['param'])
+        left_subject_text = left_subject['text'].format(*left_subject['param'])
+        right_subject_text = right_subject['text'].format(*right_subject['param'])
+
+        param_possible_sub_id = []
+        param_possible_sub_id.extend(
+            [{"id": x['subject_id'], "data": x['text']} for x in self.game_data.ai_data_json["if_subject"]])
+        param_possible_sub_id.extend(
+            [{"id": x['op_code'], "data": x['var_name']} for x in self.game_data.ai_data_json["list_var"]])
+        # op_02 = ['subject_id', 'target', 'comparator', 'value', 'debug']
+        self.param_possible_list.append(param_possible_sub_id)
+        if left_subject['param']:
+            self.param_possible_list.append([])
+        else:
+            self.param_possible_list.append([{"id:":left_subject['param'], "data":"UNUSED"}])
+        self.param_possible_list.append([{"id": i, "data": self.game_data.ai_data_json["list_comparator"][i]} for i in
+                                         range(len(self.game_data.ai_data_json["list_comparator"]))])
+        self.param_possible_list.append([])
+        self.param_possible_list.append([])
+        if self.line_index == 0:
+            print("IFFF")
+            print(self.param_possible_list)
+            print(len(self.param_possible_list))
         if op_code[4] != 0:
             return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward | Debug: {}",
-                    [left_subject, comparator, right_subject, subject_id, op_code_jump, op_code[4]]]
+                    [left_subject_text, comparator, right_subject_text, subject_id, op_code_jump, op_code[4]]]
         else:
-            return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward", [left_subject, comparator, right_subject, subject_id, op_code_jump]]
+            return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward",
+                    [left_subject_text, comparator, right_subject_text, subject_id, op_code_jump]]
+
 
     def __op_27_analysis(self, op_code):
         if op_code[0] == 23:
@@ -314,6 +355,7 @@ class Command():
         else:
             ret = "unknown flag {}".format(op_code[0])
         return ['MAKE {} of {} to {}', [ret, self.info_stat_data_monster_name, op_code[1]]]
+
 
     def __get_var_name(self, id):
         # There is specific var known, if not in the list it means it's a generic one
@@ -324,6 +366,7 @@ class Command():
         else:
             var_info_specific = "var" + str(id)
         return var_info_specific
+
 
     def __get_target(self, id, game_data: GameData, reverse=False):
         if reverse:

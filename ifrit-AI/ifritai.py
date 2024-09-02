@@ -1,15 +1,17 @@
 import os
 import pathlib
 
-import PyQt6.QtWidgets
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtWidgets import QVBoxLayout, QWidget, QScrollArea, QPushButton, QFileDialog, QComboBox, QHBoxLayout, QLabel, \
+    QColorDialog, QCheckBox
 
 from command import Command
 from commandwidget import CommandWidget
 from ifritmanager import IfritManager
 
 
-class IfritAI(PyQt6.QtWidgets.QWidget):
+class IfritAI(QWidget):
     ADD_LINE_SELECTOR_ITEMS = ["Condition", "Command"]
     MAX_COMMAND_PARAM = 7
     MAX_OP_ID = 61
@@ -18,13 +20,13 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
 
     def __init__(self, icon_path='Resources'):
 
-        PyQt6.QtWidgets.QWidget.__init__(self)
+        QWidget.__init__(self)
         self.current_if_index = 0
         self.file_loaded = ""
-        self.window_layout = PyQt6.QtWidgets.QVBoxLayout()
+        self.window_layout = QVBoxLayout()
         self.setLayout(self.window_layout)
-        self.scroll_widget = PyQt6.QtWidgets.QWidget()
-        self.scroll_area = PyQt6.QtWidgets.QScrollArea()
+        self.scroll_widget = QWidget()
+        self.scroll_area = QScrollArea()
         self.window_layout.addWidget(self.scroll_area)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
@@ -34,45 +36,54 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
         self.setMinimumSize(1280, 720)
         self.setWindowIcon(QIcon(os.path.join(icon_path, 'icon.ico')))
 
-        self.save_button = PyQt6.QtWidgets.QPushButton()
+        self.save_button = QPushButton()
         self.save_button.setIcon(QIcon(os.path.join(icon_path, 'save.svg')))
         self.save_button.setFixedSize(30, 30)
         self.save_button.clicked.connect(self.__save_file)
-        self.layout_main = PyQt6.QtWidgets.QVBoxLayout()
+        self.layout_main = QVBoxLayout()
 
-        self.file_dialog = PyQt6.QtWidgets.QFileDialog()
-        self.file_dialog_button = PyQt6.QtWidgets.QPushButton()
+        self.file_dialog = QFileDialog()
+        self.file_dialog_button = QPushButton()
         self.file_dialog_button.setIcon(QIcon(os.path.join(icon_path, 'folder.png')))
         self.file_dialog_button.setFixedSize(30, 30)
         self.file_dialog_button.clicked.connect(self.__load_file)
 
-        self.reset_button = PyQt6.QtWidgets.QPushButton()
+        self.reset_button = QPushButton()
         self.reset_button.setIcon(QIcon(os.path.join(icon_path, 'reset.png')))
         self.reset_button.setFixedSize(30, 30)
         self.reset_button.clicked.connect(self.__reload_file)
 
-        self.script_section = PyQt6.QtWidgets.QComboBox()
+        self.script_section = QComboBox()
         self.script_section.addItems(self.ifrit_manager.game_data.AI_SECTION_LIST)
         self.script_section.activated.connect(self.__section_change)
 
-        self.button_color_picker = PyQt6.QtWidgets.QPushButton()
+        self.button_color_picker = QPushButton()
         self.button_color_picker.setText('Color')
         self.button_color_picker.setFixedSize(35, 30)
         self.button_color_picker.clicked.connect(self.__select_color)
 
-        self.monster_name_label = PyQt6.QtWidgets.QLabel()
+
+        self.expert_selector = QCheckBox()
+        self.expert_selector.setChecked(False)
+        self.expert_selector.setText("Expert mode")
+        self.expert_selector.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.expert_selector.toggled.connect(self.__change_expert)
+
+        self.monster_name_label = QLabel()
         self.monster_name_label.hide()
 
-        self.layout_top = PyQt6.QtWidgets.QHBoxLayout()
+
+        self.layout_top = QHBoxLayout()
         self.layout_top.addWidget(self.file_dialog_button)
         self.layout_top.addWidget(self.save_button)
         self.layout_top.addWidget(self.reset_button)
         self.layout_top.addWidget(self.button_color_picker)
+        self.layout_top.addWidget(self.expert_selector)
         self.layout_top.addWidget(self.script_section)
         self.layout_top.addWidget(self.monster_name_label)
         self.layout_top.addStretch(1)
 
-        self.ai_layout = PyQt6.QtWidgets.QVBoxLayout()
+        self.ai_layout = QVBoxLayout()
         self.ai_layout.addStretch(1)
         self.command_line_widget = []
         self.ai_line_layout = []
@@ -86,8 +97,13 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
 
         self.show()
 
+    def __change_expert(self):
+        expert_chosen = self.expert_selector.isChecked()
+        for line in self.command_line_widget:
+            line.change_expert(expert_chosen)
+
     def __select_color(self):
-        color = PyQt6.QtWidgets.QColorDialog.getColor()
+        color = QColorDialog.getColor()
         if color.isValid():
             self.ifrit_manager.game_data.color = color.name()
             for command_widget in self.command_line_widget:
@@ -111,11 +127,11 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
 
     def __add_line(self, command: Command, insert=False):
         # Add the + button
-        add_button = PyQt6.QtWidgets.QPushButton()
+        add_button = QPushButton()
         add_button.setText("+")
         add_button.setFixedSize(30, 30)
         add_button.clicked.connect(lambda: self.__insert_line(command))
-        remove_button = PyQt6.QtWidgets.QPushButton()
+        remove_button = QPushButton()
         remove_button.setText("-")
         remove_button.setFixedSize(30, 30)
         remove_button.clicked.connect(lambda: self.__remove_line(command))
@@ -126,7 +142,7 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
         command_widget = CommandWidget(command)
         command_widget.op_id_changed_signal_emitter.op_id_signal.connect(self.__compute_if)
         self.command_line_widget.insert(command.line_index, command_widget)
-        self.ai_line_layout.insert(command.line_index, PyQt6.QtWidgets.QHBoxLayout())
+        self.ai_line_layout.insert(command.line_index, QHBoxLayout())
         # Adding widget to layout
         self.ai_line_layout[command.line_index].addWidget(self.add_button_widget[command.line_index])
         self.ai_line_layout[command.line_index].addWidget(self.remove_button_widget[command.line_index])
@@ -197,6 +213,7 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
             return lesser + [pivot] + greater
 
     def __load_file(self, file_to_load: str = ""):
+        file_to_load = os.path.join("OriginalFiles", "c0m028.dat")
         if not file_to_load:
             file_to_load = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat",
                                                             directory=os.getcwd())[0]
@@ -243,12 +260,12 @@ class IfritAI(PyQt6.QtWidgets.QWidget):
     def __set_title(self):
         font = QFont()
         font.setBold(True)
-        label = PyQt6.QtWidgets.QLabel("Command ID")
+        label = QLabel("Command ID")
         label.setFont(font)
         self.layout_title.addWidget(label)
-        label = PyQt6.QtWidgets.QLabel("Op code")
+        label = QLabel("Op code")
         label.setFont(font)
         self.layout_title.addWidget(label)
-        label = PyQt6.QtWidgets.QLabel("Text")
+        label = QLabel("Text")
         label.setFont(font)
         self.layout_title.addWidget(label)

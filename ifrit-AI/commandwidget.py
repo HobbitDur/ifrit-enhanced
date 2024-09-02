@@ -1,24 +1,31 @@
 from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QSpinBox, QFrame, QSizePolicy, QLabel
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QSpinBox, QFrame, QSizePolicy, QLabel, QComboBox
 
 from command import Command
 
+
 class OpIdChangedEmmiter(QObject):
     op_id_signal = pyqtSignal()
+
 
 class CommandWidget(QWidget):
     MAX_COMMAND_PARAM = 7
     MAX_OP_ID = 61
     MAX_OP_CODE_VALUE = 255
     MIN_OP_CODE_VALUE = 0
-    def __init__(self, command:Command):
+
+    def __init__(self, command: Command):
         QWidget.__init__(self)
+
+        # Parameters
+        self.command = command
+        self.expert_chosen = False
+
         # signal
         self.op_id_changed_signal_emitter = OpIdChangedEmmiter()
 
         self.main_layout = QHBoxLayout()
         self.setLayout(self.main_layout)
-        self.command = command
 
         # op_id widget
         self.op_id_widget = QSpinBox()
@@ -41,12 +48,10 @@ class CommandWidget(QWidget):
         self.widget_op_code = []
         self.__reset_op_code_widget()
 
-        #And the cool line with it
+        # And the cool line with it
         self.frame_text = QFrame()
         self.frame_text.setFrameStyle(0x05)
         self.frame_text.setLineWidth(2)
-
-
 
         # Now the text
         self.layout_text = QHBoxLayout()
@@ -67,29 +72,36 @@ class CommandWidget(QWidget):
     def set_text(self):
         self.widget_text.setText(self.command.get_text())
 
-
     def set_if_index(self, if_index):
         self.command.set_if_index(if_index)
         self.layout_text_spacing.takeAt(0)
-        self.layout_text_spacing.addSpacing(if_index*20)
+        self.layout_text_spacing.addSpacing(if_index * 20)
+
+    def change_expert(self, expert_chosen):
+        print("Change expert")
+        self.expert_chosen = expert_chosen
+        self.__reset_op_code_widget()
 
     def __op_id_change(self):
         self.command.set_op_id(self.op_id_widget.value())
-        size = [x for x in self.command.game_data.ai_data_json["op_code_info"] if x['op_code'] == self.command.get_id()]
-        if size:
-            size = size[0]['size']
-        else:
-            size = [x for x in self.command.game_data.ai_data_json["op_code_info"] if x['op_code'] == 255][0]['size']
-        self.command.set_op_code([0] * size)
         self.__reset_op_code_widget()
         self.widget_text.setText(self.command.get_text())
         self.op_id_changed_signal_emitter.op_id_signal.emit()
 
-
     def __op_code_change(self):
+        print("op_code_changed")
         op_code = []
-        for widget in self.widget_op_code:
-            op_code.append(widget.value())
+
+        for i in range(0, len(self.command.get_op_code())):
+            try:
+                op_code.append(self.widget_op_code[i].value())
+            except AttributeError:
+                op_code.append([x['id'] for x in self.command.param_possible_list[i] if
+                                x['data'] == self.widget_op_code[i].currentText()][0])
+            except:
+                print("Unexpected widget with type: {}".format(type(self.widget_op_code[i])))
+        print(self.command.get_id())
+        print(op_code)
         self.command.set_op_code(op_code)
         self.widget_text.setText(self.command.get_text())
 
@@ -99,20 +111,47 @@ class CommandWidget(QWidget):
             widget.deleteLater()
         self.widget_op_code = []
         for i in range(self.MAX_COMMAND_PARAM):
-            self.widget_op_code.append(QSpinBox())
-            self.widget_op_code[i].setFixedSize(50, 30)
-            self.widget_op_code[i].setMaximum(self.MAX_OP_CODE_VALUE)
-            self.widget_op_code[i].setMinimum(self.MIN_OP_CODE_VALUE)
-            self.widget_op_code[i].wheelEvent = lambda event: None
-            if i < len(self.command.get_op_code()):
-                self.widget_op_code[i].setValue(self.command.get_op_code()[i])
+            if not self.expert_chosen and self.command.param_possible_list and len(
+                    self.command.param_possible_list) > i and self.command.param_possible_list[i]:
+                if self.command.line_index == 0:
+                    print("QCombo box !!")
+                    print(i)
+                    print(len(self.command.param_possible_list))
+                    print(self.expert_chosen)
+                    print(self.command.line_index)
+                    print(self.command.param_possible_list)
+                    print(self.command.param_possible_list[i])
+                self.widget_op_code.append(QComboBox())
+                items = []
+                current_text = ""
+                for el in self.command.param_possible_list[i]:
+                    if i < len(self.command.get_op_code()) and el['id'] == self.command.get_op_code()[i]:
+                        current_text = el['data']
+                    items.append(el["data"])
+
+                self.widget_op_code[i].addItems(items)
+                self.widget_op_code[i].setCurrentText(current_text)
+                self.widget_op_code[i].currentIndexChanged.connect(self.__op_code_change)
             else:
-                self.widget_op_code[i].setValue(0)
+                self.widget_op_code.append(QSpinBox())
+                self.widget_op_code[i].setMaximum(self.MAX_OP_CODE_VALUE)
+                self.widget_op_code[i].setMinimum(self.MIN_OP_CODE_VALUE)
+                self.widget_op_code[i].wheelEvent = lambda event: None
+
+                if i < len(self.command.get_op_code()):
+                    self.widget_op_code[i].setValue(self.command.get_op_code()[i])
+                else:
+                    self.widget_op_code[i].setValue(0)
+                self.widget_op_code[i].valueChanged.connect(self.__op_code_change)
+            if self.expert_chosen:
+                self.widget_op_code[i].setFixedSize(50, 30)
+            else:
+                self.widget_op_code[i].setFixedSize(80, 30)
+            if i >= len(self.command.get_op_code()):
                 retain_policy = QSizePolicy()
                 retain_policy.setRetainSizeWhenHidden(True)
                 self.widget_op_code[i].setSizePolicy(retain_policy)
                 self.widget_op_code[i].hide()
-            self.widget_op_code[i].valueChanged.connect(lambda: self.__op_code_change())
 
         for widget in self.widget_op_code:
             self.layout_op_code.addWidget(widget)
