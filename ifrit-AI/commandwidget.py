@@ -11,6 +11,7 @@ class OpIdChangedEmmiter(QObject):
 class CommandWidget(QWidget):
     MAX_COMMAND_PARAM = 7
     MAX_OP_ID = 61
+    MIN_OP_ID = 0
     MAX_OP_CODE_VALUE = 255
     MIN_OP_CODE_VALUE = 0
 
@@ -29,11 +30,7 @@ class CommandWidget(QWidget):
 
         # op_id widget
         self.op_id_widget = QSpinBox()
-        self.op_id_widget.setFixedSize(50, 30)
-        self.op_id_widget.setValue(command.get_id())
-        self.op_id_widget.setMaximum(self.MAX_OP_ID)
-        self.op_id_widget.valueChanged.connect(self.__op_id_change)
-        self.op_id_widget.wheelEvent = lambda event: None
+
 
         # Line for cool gui
         frame = QFrame()
@@ -42,6 +39,8 @@ class CommandWidget(QWidget):
         self.layout_id = QHBoxLayout()
         self.layout_id.addWidget(self.op_id_widget)
         self.layout_id.addWidget(frame)
+
+        self.__reset_op_id_widget()
 
         # Create the op_code widgets
         self.layout_op_code = QHBoxLayout()
@@ -79,10 +78,18 @@ class CommandWidget(QWidget):
 
     def change_expert(self, expert_chosen):
         self.expert_chosen = expert_chosen
+        self.__reset_op_id_widget()
         self.__reset_op_code_widget()
 
     def __op_id_change(self):
-        self.command.set_op_id(self.op_id_widget.value())
+        if self.expert_chosen:
+            self.command.set_op_id(self.op_id_widget.value())
+        else:
+            dict_data = [x["id"] for x in self.command.id_possible_list if x["data"] == self.op_id_widget.currentText()]
+            if dict_data:
+                self.command.set_op_id(dict_data[0])
+            else:
+                print("No data found for value: {}".format(self.op_id_widget.currentText()))
         self.__reset_op_code_widget()
         self.widget_text.setText(self.command.get_text())
         self.op_id_changed_signal_emitter.op_id_signal.emit()
@@ -103,18 +110,40 @@ class CommandWidget(QWidget):
         if self.command.get_id() == 2:  # If an if, reset the left condition as it can change of type
             self.__reset_op_code_widget((1,))
 
+    def __reset_op_id_widget(self):
+        self.op_id_widget.setParent(None)
+        self.op_id_widget.deleteLater()
+        if not self.expert_chosen and self.command.id_possible_list:
+            self.op_id_widget = QComboBox()
+            self.op_id_widget.addItems([x['data'] for x in self.command.id_possible_list])
+            self.op_id_widget.setFixedSize(80, 30)
+
+            op_line_data = [x['short_text'] for x in self.command.game_data.ai_data_json['op_code_info'] if x["op_code"] == self.command.get_id()]
+            if op_line_data:
+                self.op_id_widget.setCurrentText(op_line_data[0])
+            else:
+                print("Id not found: {}".format(self.command.get_id()))
+            self.op_id_widget.view().setMinimumWidth(self.__get_largest_size_from_combobox(self.op_id_widget) + 40)
+            self.op_id_widget.currentIndexChanged.connect(self.__op_id_change)
+        else:
+            self.op_id_widget = QSpinBox()
+            self.op_id_widget.setFixedSize(50, 30)
+            self.op_id_widget.setValue(self.command.get_id())
+            self.op_id_widget.setMaximum(self.MAX_OP_ID)
+            self.op_id_widget.setMinimum(self.MIN_OP_ID)
+            self.op_id_widget.valueChanged.connect(self.__op_id_change)
+            self.op_id_widget.wheelEvent = lambda event: None
+
+        self.layout_id.insertWidget(0, self.op_id_widget)
+
     def __reset_op_code_widget(self, list_to_reset=()):
         if not list_to_reset:
             list_to_reset = range(self.MAX_COMMAND_PARAM)
-
         for i in list_to_reset:
             if i < len(self.widget_op_code):
                 self.widget_op_code[i].setParent(None)
                 self.widget_op_code[i].deleteLater()
                 del self.widget_op_code[i]
-                #print("Size layout: {}".format( self.layout_op_code.count()))
-                #self.layout_op_code.takeAt(i)
-                #print("Size layout: {}".format(self.layout_op_code.count()))
             if not self.expert_chosen and self.command.param_possible_list and len(
                     self.command.param_possible_list) > i and self.command.param_possible_list[i]:
                 self.widget_op_code.insert(i, QComboBox())
