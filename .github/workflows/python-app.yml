@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   install_python_dependencies:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
@@ -27,17 +27,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ifrit-AI/requirements.txt
         pip install pyinstaller
-        
-        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/
-        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/Scripts
-        ls -al ifrit-AI
     - name: Lint with Ruff
       run: |
         pip install ruff
         ruff check --output-format=github .
       continue-on-error: true  
   create_assets:
-      runs-on: ubuntu-latest
+      runs-on: windows-latest
       needs:
       - install_python_dependencies
       steps:
@@ -45,9 +41,8 @@ jobs:
       - name: Create xlsx release
         shell: bash
         run: |
-          ls -al
           pip freeze
-          python -m PyInstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
@@ -90,7 +85,7 @@ jobs:
     needs:
     - install_python_dependencies
     - create_assets
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: testprint
         run: |
@@ -100,8 +95,8 @@ jobs:
     needs:
     - install_python_dependencies
     - create_assets
+    runs-on: windows-latest
     concurrency: release-${{ github.ref }}
-    runs-on: ubuntu-latest
     steps:
     - name: Download Files
       uses: actions/download-artifact@v4
