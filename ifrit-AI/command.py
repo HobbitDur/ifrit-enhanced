@@ -27,9 +27,7 @@ class Command():
     def set_op_id(self, op_id):
         self.__op_id = op_id
         op_info = self.__get_op_code_line_info()
-        print(op_info)
         self.__op_code = [0]* op_info["size"]
-        print(self.__op_code)
         self.__analyse_op_data()
 
     def set_op_code(self, op_code):
@@ -102,7 +100,6 @@ class Command():
                     param_value.append(self.__op_code[op_index])
             for i in range(len(param_value)):
                 param_value[i] = '<span style="color:#8a1624;">' + param_value[i] + '</span>'
-            print(param_value)
             self.__text = op_info['text'].format(*param_value)
         elif op_info["complexity"] == "complex":
             call_function = getattr(self, "_Command__op_" + "{:02X}".format(op_info["op_code"]) + "_analysis")
@@ -131,7 +128,8 @@ class Command():
     def __op_18_analysis(self, op_code):
         ret = self.__op_01_analysis(op_code)
         if op_code[0] != 0:
-            ret += ' debug: <span style=\"color:#8a1624;\">{}</span>'.format(str(op_code[0]))
+            ret += (''
+                    ' debug: <span style=\"color:#8a1624;\">{}</span>').format(str(op_code[0]))
         return ret
 
     def __op_28_analysis(self, op_code):
@@ -195,10 +193,7 @@ class Command():
         op_code_value = op_code[3]
         op_code_debug = int.from_bytes(bytearray([op_code[5], op_code[6]]), byteorder='little')
         if op_code_comparator < len(self.__game_data.ai_data_json['list_comparator']):
-            print(self.__game_data.ai_data_json['list_comparator'])
             comparator = self.__game_data.ai_data_json['list_comparator'][op_code_comparator]
-            print(op_code_comparator)
-            print(comparator)
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
@@ -297,7 +292,6 @@ class Command():
             right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
         left_subject = left_subject['text'].format(*left_subject['param'])
         right_subject = right_subject['text'].format(*right_subject['param'])
-        print(comparator)
         print(f"IF - Subject ID: <span style=\"color:#8a1624;\">{subject_id}</span>,{left_subject} {comparator} {right_subject}, Jump <span style=\"color:#8a1624;\">{op_code_debug}</span> bytes forward, Debug: <span style=\"color:#8a1624;\">{op_code[4]}</span>"
 )
         return f"IF - Subject ID: <span style=\"color:#8a1624;\">{subject_id}</span>,{left_subject} {comparator} {right_subject}, Jump <span style=\"color:#8a1624;\">{op_code_debug}</span> bytes forward, Debug: <span style=\"color:#8a1624;\">{op_code[4]}</span>"
