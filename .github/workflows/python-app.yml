@@ -24,7 +24,7 @@ jobs:
         python-version: "3.12"
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
+        python -m pip install --upgrade pip
         pip install -r ifrit-AI/requirements.txt
         pip install pyinstaller
         ls -al ifrit-AI
@@ -44,9 +44,8 @@ jobs:
         run: |
           ls -al
           pip freeze
-          python -m pip freeze
-          python3 -m pip freeze
-          python3 -m Pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          ls -al ~/.local/bin
+          ~/.local/bin/pyinstaller/pyinstaller.exe -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
