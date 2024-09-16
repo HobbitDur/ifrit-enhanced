@@ -28,6 +28,9 @@ jobs:
         pip install -r ifrit-AI/requirements.txt
         pip install pyinstaller
         pip freeze
+        pip3 freeze
+        python -m pip freeze   
+        python3 -m pip freeze
     - name: Lint with Ruff
       run: |
         pip install ruff
@@ -42,7 +45,7 @@ jobs:
       - name: Create xlsx release
         shell: bash
         run: |
-          python -m PyInstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          python3 -m PyInstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
