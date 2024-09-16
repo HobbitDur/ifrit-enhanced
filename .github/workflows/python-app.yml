@@ -42,7 +42,7 @@ jobs:
       - name: Create xlsx release
         shell: bash
         run: |
-          pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          python -m PyInstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
