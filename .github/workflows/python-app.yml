@@ -64,12 +64,6 @@ jobs:
       - name: zip name tag
         if: github.event.ref_type == 'tag'
         run: 7z  a -tzip ../ifrit-enhanced${{  github.ref_name }}.zip .  
-      - name: Create full release - End
-        shell: bash
-        run: |
-          cd ../..
-          ls -al
-          ls -al release/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
