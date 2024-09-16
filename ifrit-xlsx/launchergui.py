@@ -6,12 +6,13 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QCh
 
 class WindowLauncher(QWidget):
     MOD_CHECK_DEFAULT = ['FFNx', 'FFNxFF8Music']
+
     def __init__(self, ifrit_manager, list_lang, list_launch_option):
         QWidget.__init__(self)
         self.setLayoutDirection(Qt.LeftToRight)
         self.ifrit_manager = ifrit_manager
         self.setWindowTitle("Ifrit-XLSX Launcher")
-        #self.setMinimumSize(300,200)
+        # self.setMinimumSize(300,200)
 
         self.lang_option = QComboBox()
         self.lang_option.addItems(list_lang)
@@ -38,6 +39,9 @@ class WindowLauncher(QWidget):
 
         self.delete = QCheckBox("Delete dat files (only keep battle.fs)")
         self.delete.hide()
+
+        self.analyse_ia = QCheckBox("Analyse IA")
+        self.analyse_ia.setChecked(True)
 
         self.copy_option = QLineEdit()
         self.copy_option_label = QLabel("Copy battle.f* to given path (FF8 path).\n Let empty if not needed")
@@ -72,6 +76,7 @@ class WindowLauncher(QWidget):
         self.general_layout.addWidget(self.open_xlsx)
         self.general_layout.addLayout(self.limit_option_layout)
         self.general_layout.addLayout(self.copy_option_layout)
+        self.general_layout.addWidget(self.analyse_ia)
         self.general_layout.addWidget(self.launch_button)
 
         self.setLayout(self.general_layout)
@@ -84,8 +89,9 @@ class WindowLauncher(QWidget):
         open_xlsx_option = self.open_xlsx.checkState()
         delete_option = self.delete.checkState()
         copy_option = self.copy_option.text()
-        self.ifrit_manager.exec(lang, launch_option, limit_option, no_pack_option, open_xlsx_option, delete_option, copy_option)
-        #QCoreApplication.quit()
+        analyse_ia_option = self.analyse_ia.checkState()
+        self.ifrit_manager.exec(lang, launch_option, limit_option, no_pack_option, open_xlsx_option, delete_option, copy_option, analyse_ia_option)
+        # QCoreApplication.quit()
 
     def launch_option_changed(self):
         if str(self.launch_option.currentText()) == 'fs_to_xlsx':
@@ -103,5 +109,3 @@ class WindowLauncher(QWidget):
             self.delete.show()
             self.copy_option.show()
             self.copy_option_label.show()
-
-
