@@ -213,7 +213,7 @@ class IfritAI(QWidget):
             return lesser + [pivot] + greater
 
     def __load_file(self, file_to_load: str = ""):
-        file_to_load = os.path.join("OriginalFiles", "c0m028.dat")
+        #file_to_load = os.path.join("OriginalFiles", "c0m028.dat") # For developing faster
         if not file_to_load:
             file_to_load = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat",
                                                             directory=os.getcwd())[0]

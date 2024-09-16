@@ -20,6 +20,7 @@ class Command():
         self.was_item = False
         self.was_gforce = False
         self.type_data = []
+        self.id_possible_list = [{'id': x['op_code'], 'data': x['short_text']} for x in self.game_data.ai_data_json['op_code_info']]
         self.param_possible_list = []
         self.__analyse_op_data()
 
@@ -37,6 +38,8 @@ class Command():
         self.__op_id = op_id
         op_info = self.__get_op_code_line_info()
         self.__op_code = [0] * op_info["size"]
+
+        self.id_possible_list=[{'id': x['op_code'], 'data': x['short_text']} for x in self.game_data.ai_data_json['op_code_info']]
         self.__analyse_op_data()
 
     def set_op_code(self, op_code):
@@ -168,7 +171,6 @@ class Command():
 
     def __op_40_analysis(self, op_code):
         aptitude_info = [x for x in self.game_data.ai_data_json['aptitude_list'] if x['aptitude_id'] == op_code[0]]
-        print(aptitude_info)
         if aptitude_info:
             aptitude_text = aptitude_info[0]['text']
         else:
