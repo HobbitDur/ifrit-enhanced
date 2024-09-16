@@ -27,7 +27,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ifrit-AI/requirements.txt
         pip install pyinstaller
-        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/lib/python3.12/site-packages/PyInstaller
+        
+        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/
+        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/Scripts
         ls -al ifrit-AI
     - name: Lint with Ruff
       run: |
