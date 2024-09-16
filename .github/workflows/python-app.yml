@@ -73,7 +73,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "ifrit-enhanced-${{ github.sha }}.zip"
+          name: "ifrit-enhanced-${{ github.sha }}"
           path: ${{ github.workspace }}/release
   release_assets:
     name: Release
@@ -93,4 +93,4 @@ jobs:
         prerelease: true
         title: "Unstable Build"
         files: |
-          ifrit-enhanced-*.zip
+          *
