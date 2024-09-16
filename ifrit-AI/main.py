@@ -13,13 +13,11 @@ def exception_hook(exctype, value, traceback):
     sys.exit(1)
 
 if __name__ == '__main__':
-    faulthandler.enable()
     sys.excepthook = exception_hook
 
     app = QApplication.instance()
     if not app:  # sinon on crée une instance de QApplication
         app = QApplication(sys.argv)
-        print(QStyleFactory.keys())
         if app.style().objectName() == "windows11":
             app.setStyle("Fusion")
     main_window = IfritAI()

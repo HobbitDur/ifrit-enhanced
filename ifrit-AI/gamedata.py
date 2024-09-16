@@ -85,6 +85,8 @@ class GameData():
     SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB = {'offset': 0x0C, 'size': 4, 'byteorder': 'little', 'name': 'offset_text_sub',
                                                     'pretty_name': 'Offset to text sub-section'}
 
+    SECTION_BATTLE_SCRIPT_BATTLE_SCRIPT_HEADER_LIST_DATA = [SECTION_BATTLE_SCRIPT_HEADER_NB_SUB, SECTION_BATTLE_SCRIPT_HEADER_OFFSET_AI_SUB,
+                                                            SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB, SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB]
     # Subsection AI
     SECTION_BATTLE_SCRIPT_AI_OFFSET_INIT_CODE = {'offset': 0x00, 'size': 4, 'byteorder': 'little', 'name': 'offset_init_code',
                                                  'pretty_name': 'Offset init code'}
@@ -127,6 +129,7 @@ class GameData():
     STAT_MIN_VAL = 0
     STAT_MAX_VAL = 255
     AI_DATA_PATH = os.path.join("Resources", "ai_info.json")
+    AI_SECTION_LIST = ['Init code', 'Enemy turn', 'Counter-attack', 'Death', 'Before dying or taking a hit']
 
     def __init__(self):
         self.devour_values = {}
@@ -146,6 +149,7 @@ class GameData():
         self.monster_values = {}
         self.ai_data_json = []
         self.__init_hex_to_str_table()
+
 
     def load_ai_data(self, file_path):
         with open(file_path, encoding="utf8") as f:
