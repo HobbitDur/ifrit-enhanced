@@ -1,0 +1,8 @@
+Fire
+Ice
+Thunder
+Earth
+Bio
+Wind
+Water
+Holy
