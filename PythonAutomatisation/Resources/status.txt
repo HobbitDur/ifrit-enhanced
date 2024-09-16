@@ -13,8 +13,8 @@
  Reflect
  Doom
  Sub-petrify
- float
+ Float
  Drain
- Confu
+ Confusion
  Expulsion
  Gravity
