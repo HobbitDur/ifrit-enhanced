@@ -46,7 +46,7 @@ jobs:
           ls -al
           ls -al /opt/hostedtoolcache/Python/
           cd ifrit-xlsx/
-          pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          Pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           cd ifrit-AI/
-          python -m pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
+          python -m Pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
           mkdir -p release/OriginalFiles/;
           cp -r Resources/ release/;
           cp -r OriginalFiles/ release/;
