@@ -542,6 +542,8 @@ class DatToXlsx():
             index_title = 0
 
             row_index['ia_data'] = ROW_IA
+            print("WRITING XLSX IA")
+            print(ennemy.battle_script_data['ia_data'])
             for code_section in ennemy.battle_script_data['ia_data']:
                 worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
                                       ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 10) + str(row_index['ia_data']),
@@ -549,6 +551,8 @@ class DatToXlsx():
                 index_title += 1
                 col_ia_index_ref = COL_ABILITIES
                 for ia_data in code_section:
+
+                    print(ia_data)
                     format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
                     col_ia_index = col_ia_index_ref
                     if ia_data['id'] == 2:  # IF
@@ -695,15 +699,13 @@ class XlsxToDat():
 
             # Def reading
             list_value = []
-            for i in range(2, len(game_data.magic_type_values) + 1):
+            for i in range(2, len(game_data.magic_type_values)+2):
                 list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
             current_ennemy.info_stat_data['elem_def'] = list_value
-
             list_value = []
-            for i in range(len(game_data.magic_type_values) + 1, len(game_data.magic_type_values) + len(game_data.status_values)):
+            for i in range(len(game_data.magic_type_values)+2, len(game_data.magic_type_values) +2+ len(game_data.status_values)):
                 list_value.append(sheet.cell(i, COL_DEF + 1 + 1).value)
             current_ennemy.info_stat_data['status_def'] = list_value
-
             # Item read
             item = ['mag', 'mug', 'drop']
             sub_item = ['low_lvl', 'med_lvl', 'high_lvl']
