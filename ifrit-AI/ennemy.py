@@ -1,9 +1,5 @@
 import copy
-import glob
 import os
-import re
-import shutil
-from math import floor
 
 from command import Command
 from gamedata import GameData
