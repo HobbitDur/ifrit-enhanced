@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: "3.12"
     - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
         run: |
           ls -al
           cd ifrit-xlsx/
-          pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          python -m pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
           cp -r Resources/ release/;
           rm -rf OriginalFiles/decompressed_battle ;
           mkdir -p release/OriginalFiles/;
@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           cd ifrit-AI/
-          pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
+          python -m pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
           mkdir -p release/OriginalFiles/;
           cp -r Resources/ release/;
           cp -r OriginalFiles/ release/;
@@ -75,6 +75,7 @@ jobs:
           zip a -tzip ../ifrit-enhanced-0.x.zip .;
           cd ..;
           rm -r ifrit-enhanced-0.x
+          ls -al
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
