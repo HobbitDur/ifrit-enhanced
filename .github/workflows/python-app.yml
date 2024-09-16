@@ -24,13 +24,13 @@ jobs:
         python-version: "3.12"
     - name: Install dependencies
       run: |
-        python -m pip3 install --upgrade pip
-        pip3 install -r ifrit-AI/requirements.txt
-        pip3 install pyinstaller
+        python3 -m pip install --upgrade pip
+        pip install -r ifrit-AI/requirements.txt
+        pip install pyinstaller
         ls -al ifrit-AI
     - name: Lint with Ruff
       run: |
-        pip3 install ruff
+        pip install ruff
         ruff check --output-format=github .
       continue-on-error: true  
   create_assets:
