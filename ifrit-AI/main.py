@@ -13,6 +13,7 @@ def exception_hook(exctype, value, traceback):
     sys.exit(1)
 
 if __name__ == '__main__':
+    faulthandler.enable()
     sys.excepthook = exception_hook
 
     app = QApplication.instance()

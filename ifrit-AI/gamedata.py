@@ -148,6 +148,7 @@ class GameData():
         self.special_action = {}
         self.monster_values = {}
         self.ai_data_json = []
+        self.color = "#0055ff"
         self.__init_hex_to_str_table()
 
 
