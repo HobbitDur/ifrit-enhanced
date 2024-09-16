@@ -246,4 +246,4 @@ ModelManifest.xml
 **/OutputFiles/
 **/__pycache__/
 **/decompressed_battle/
-
+**/release
