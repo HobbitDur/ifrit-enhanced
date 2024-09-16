@@ -16,7 +16,7 @@ from xlsxmanager import XlsxToDat, DatToXlsx
 
 
 class IfritManager():
-    LIST_LANG = ('eng', 'fre')
+    LIST_LANG = ('eng', 'fre', 'ita')
     LIST_OPTION = ('fs_to_xlsx', 'xlsx_to_fs', 'both')
     FOLDER_INPUT = "OriginalFiles"
     FOLDER_OUTPUT = "OutputFiles"

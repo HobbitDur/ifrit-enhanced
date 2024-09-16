@@ -105,6 +105,8 @@ class Ennemy():
                              {'op_code': 0x41, 'size': 0, 'func': self.__op_41_analysis},  # Unknown goliath (unused ?)
                              ]
         self.list_comparator = ['⩵', '<', '>', '≠', '≤', '≥']
+        self.list_target_char = ['Squall', 'Zell', 'Irvine', 'Quistis', 'Rinoa', 'Selphie', 'Seifer', 'Edea', 'Laguna', 'Kiros', 'Ward']  # Start at 0
+
 
     def __str__(self):
         return "Name: {} \nData:{}".format(self.info_stat_data['monster_name'],
@@ -962,7 +964,6 @@ class Ennemy():
         return var
 
     def __get_target(self, id, game_data: GameData, reverse=False):
-        list_target_char = ['Squall', 'Zell', 'Irvine', 'Quistis', 'Linoa', 'Selphie', 'Seifer', 'Edea', 'Laguna', 'Kiros', 'Ward']  # Start at 0
         if reverse:
             c8_data = "ALL ENNEMY"
         else:
@@ -978,8 +979,8 @@ class Ennemy():
                              'RANDOM ENNEMY',  # 0xD0 Marsupial with meteor
                              'NEW ALLY']  # 0xD1 shiva
 
-        if id < len(list_target_char):
-            return list_target_char[id]
+        if id < len(self.list_target_char):
+            return self.list_target_char[id]
         elif id >= 0xC8 and id < 0xC8 + len(list_target_other):
             return list_target_other[id - 0xC8]
         elif id >= 16:
