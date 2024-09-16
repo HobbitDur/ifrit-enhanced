@@ -37,7 +37,6 @@ class Command():
         self.__analyse_op_data()
 
     def set_op_code(self, op_code):
-        print(op_code)
         self.__op_code = op_code
         self.__analyse_op_data()
 

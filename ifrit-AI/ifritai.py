@@ -1,19 +1,15 @@
-import copy
 import os
 import pathlib
 
-from PyQt6 import sip
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon, QFont, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QLabel, QFrame, QComboBox, QHBoxLayout, QFileDialog, \
-    QSpinBox, QGridLayout, QScrollArea, QSizePolicy, QStyle, QStyleFactory, QColorDialog
+import PyQt6.QtWidgets
+from PyQt6.QtGui import QIcon, QFont
 
 from command import Command
 from commandwidget import CommandWidget
 from ifritmanager import IfritManager
 
 
-class IfritAI(QWidget):
+class IfritAI(PyQt6.QtWidgets.QWidget):
     ADD_LINE_SELECTOR_ITEMS = ["Condition", "Command"]
     MAX_COMMAND_PARAM = 7
     MAX_OP_ID = 61
@@ -22,13 +18,13 @@ class IfritAI(QWidget):
 
     def __init__(self, icon_path='Resources'):
 
-        QWidget.__init__(self)
+        PyQt6.QtWidgets.QWidget.__init__(self)
         self.current_if_index = 0
         self.file_loaded = ""
-        self.window_layout = QVBoxLayout()
+        self.window_layout = PyQt6.QtWidgets.QVBoxLayout()
         self.setLayout(self.window_layout)
-        self.scroll_widget = QWidget()
-        self.scroll_area = QScrollArea()
+        self.scroll_widget = PyQt6.QtWidgets.QWidget()
+        self.scroll_area = PyQt6.QtWidgets.QScrollArea()
         self.window_layout.addWidget(self.scroll_area)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
@@ -38,37 +34,36 @@ class IfritAI(QWidget):
         self.setMinimumSize(1280, 720)
         self.setWindowIcon(QIcon(os.path.join(icon_path, 'icon.ico')))
 
-
-        self.save_button = QPushButton()
+        self.save_button = PyQt6.QtWidgets.QPushButton()
         self.save_button.setIcon(QIcon(os.path.join(icon_path, 'save.svg')))
         self.save_button.setFixedSize(30, 30)
         self.save_button.clicked.connect(self.__save_file)
-        self.layout_main = QVBoxLayout()
+        self.layout_main = PyQt6.QtWidgets.QVBoxLayout()
 
-        self.file_dialog = QFileDialog()
-        self.file_dialog_button = QPushButton()
+        self.file_dialog = PyQt6.QtWidgets.QFileDialog()
+        self.file_dialog_button = PyQt6.QtWidgets.QPushButton()
         self.file_dialog_button.setIcon(QIcon(os.path.join(icon_path, 'folder.png')))
         self.file_dialog_button.setFixedSize(30, 30)
         self.file_dialog_button.clicked.connect(self.__load_file)
 
-        self.reset_button = QPushButton()
+        self.reset_button = PyQt6.QtWidgets.QPushButton()
         self.reset_button.setIcon(QIcon(os.path.join(icon_path, 'reset.png')))
         self.reset_button.setFixedSize(30, 30)
         self.reset_button.clicked.connect(self.__reload_file)
 
-        self.script_section = QComboBox()
+        self.script_section = PyQt6.QtWidgets.QComboBox()
         self.script_section.addItems(self.ifrit_manager.game_data.AI_SECTION_LIST)
         self.script_section.activated.connect(self.__section_change)
 
-        self.button_color_picker = QPushButton()
+        self.button_color_picker = PyQt6.QtWidgets.QPushButton()
         self.button_color_picker.setText('Color')
         self.button_color_picker.setFixedSize(35, 30)
         self.button_color_picker.clicked.connect(self.__select_color)
 
-        self.monster_name_label = QLabel()
+        self.monster_name_label = PyQt6.QtWidgets.QLabel()
         self.monster_name_label.hide()
 
-        self.layout_top = QHBoxLayout()
+        self.layout_top = PyQt6.QtWidgets.QHBoxLayout()
         self.layout_top.addWidget(self.file_dialog_button)
         self.layout_top.addWidget(self.save_button)
         self.layout_top.addWidget(self.reset_button)
@@ -77,7 +72,7 @@ class IfritAI(QWidget):
         self.layout_top.addWidget(self.monster_name_label)
         self.layout_top.addStretch(1)
 
-        self.ai_layout = QVBoxLayout()
+        self.ai_layout = PyQt6.QtWidgets.QVBoxLayout()
         self.ai_layout.addStretch(1)
         self.command_line_widget = []
         self.ai_line_layout = []
@@ -92,7 +87,7 @@ class IfritAI(QWidget):
         self.show()
 
     def __select_color(self):
-        color = QColorDialog.getColor()
+        color = PyQt6.QtWidgets.QColorDialog.getColor()
         if color.isValid():
             self.ifrit_manager.game_data.color = color.name()
             for command_widget in self.command_line_widget:
@@ -115,13 +110,12 @@ class IfritAI(QWidget):
         self.__compute_if()
 
     def __add_line(self, command: Command, insert=False):
-        print("add line index: {}".format(command.line_index))
         # Add the + button
-        add_button = QPushButton()
+        add_button = PyQt6.QtWidgets.QPushButton()
         add_button.setText("+")
         add_button.setFixedSize(30, 30)
         add_button.clicked.connect(lambda: self.__insert_line(command))
-        remove_button = QPushButton()
+        remove_button = PyQt6.QtWidgets.QPushButton()
         remove_button.setText("-")
         remove_button.setFixedSize(30, 30)
         remove_button.clicked.connect(lambda: self.__remove_line(command))
@@ -132,7 +126,7 @@ class IfritAI(QWidget):
         command_widget = CommandWidget(command)
         command_widget.op_id_changed_signal_emitter.op_id_signal.connect(self.__compute_if)
         self.command_line_widget.insert(command.line_index, command_widget)
-        self.ai_line_layout.insert(command.line_index, QHBoxLayout())
+        self.ai_line_layout.insert(command.line_index, PyQt6.QtWidgets.QHBoxLayout())
         # Adding widget to layout
         self.ai_line_layout[command.line_index].addWidget(self.add_button_widget[command.line_index])
         self.ai_line_layout[command.line_index].addWidget(self.remove_button_widget[command.line_index])
@@ -140,8 +134,6 @@ class IfritAI(QWidget):
 
         # Adding to the "main" layout
         self.ai_layout.insertLayout(command.line_index, self.ai_line_layout[command.line_index])
-
-
 
     def __remove_line(self, command):
         # Removing the widget
@@ -182,7 +174,6 @@ class IfritAI(QWidget):
                     widget.deleteLater()
 
     def __compute_if(self):
-        print("Compute if")
         array_sorted = self.command_line_widget
         array_sorted = self.qsort_command_widget(array_sorted)
         if_index = 0
@@ -194,23 +185,26 @@ class IfritAI(QWidget):
             if command_widget.command.get_id() == 2:
                 if_index += 1
 
-    def qsort_command_widget(self, inlist:[CommandWidget]):
+    def qsort_command_widget(self, inlist: [CommandWidget]):
         if inlist == []:
             return []
         else:
             pivot = inlist[0]
-            lesser = self.qsort_command_widget([x for x in inlist[1:] if x.command.line_index < pivot.command.line_index])
-            greater = self.qsort_command_widget([x for x in inlist[1:] if x.command.line_index >= pivot.command.line_index])
+            lesser = self.qsort_command_widget(
+                [x for x in inlist[1:] if x.command.line_index < pivot.command.line_index])
+            greater = self.qsort_command_widget(
+                [x for x in inlist[1:] if x.command.line_index >= pivot.command.line_index])
             return lesser + [pivot] + greater
 
     def __load_file(self, file_to_load: str = ""):
-        file_to_load = os.path.join("OriginalFiles", "c0m028.dat")
         if not file_to_load:
-            file_to_load = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat", directory=os.getcwd())[0]
+            file_to_load = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat",
+                                                            directory=os.getcwd())[0]
         if file_to_load:
             self.ifrit_manager.init_from_file(file_to_load)
             self.monster_name_label.setText(
-                "Monster : {}, file: {}".format(self.ifrit_manager.ennemy.info_stat_data['monster_name'], pathlib.Path(file_to_load).name))
+                "Monster : {}, file: {}".format(self.ifrit_manager.ennemy.info_stat_data['monster_name'],
+                                                pathlib.Path(file_to_load).name))
             self.monster_name_label.show()
             self.file_loaded = file_to_load
             self.__setup_section_data()
@@ -236,7 +230,6 @@ class IfritAI(QWidget):
         self.ai_line_layout = []
 
     def __setup_section_data(self):
-        print("Setup section data")
         line_index = 0
         index_section = self.ifrit_manager.game_data.AI_SECTION_LIST.index(self.script_section.currentText())
         if self.ifrit_manager.ai_data:
@@ -250,12 +243,12 @@ class IfritAI(QWidget):
     def __set_title(self):
         font = QFont()
         font.setBold(True)
-        label = QLabel("Command ID")
+        label = PyQt6.QtWidgets.QLabel("Command ID")
         label.setFont(font)
         self.layout_title.addWidget(label)
-        label = QLabel("Op code")
+        label = PyQt6.QtWidgets.QLabel("Op code")
         label.setFont(font)
         self.layout_title.addWidget(label)
-        label = QLabel("Text")
+        label = PyQt6.QtWidgets.QLabel("Text")
         label.setFont(font)
         self.layout_title.addWidget(label)
