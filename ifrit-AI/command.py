@@ -17,6 +17,7 @@ class Command():
         self.op_code_widget = []
         self.text_widget = None
         self.line_index = line_index
+        self.if_index = 0
 
     def __str__(self):
         return f"ID: {self.__op_id}, op_code: {self.__op_code}, text: {self.__text}"
@@ -67,7 +68,7 @@ class Command():
                     param_value.append(str(self.__op_code[op_index]))
                 elif type == "var":
                     # There is specific var known, if not in the list it means it's a generic one
-                    param_value.append(self.__get_var_name(self.__op_code[op_index]))
+                    param_value.append("var"+self.__get_var_name(self.__op_code[op_index]))
                 elif type == "special_action":
                     if self.__op_code[op_index] < len(self.__game_data.special_action):
                         param_value.append(self.__game_data.special_action[self.__op_code[op_index]]['name'])
@@ -292,8 +293,7 @@ class Command():
             right_subject = {'text': '<span style=\"color:#8a1624;\">{}</span>', 'param': [op_code_value]}
         left_subject = left_subject['text'].format(*left_subject['param'])
         right_subject = right_subject['text'].format(*right_subject['param'])
-        print(f"IF - Subject ID: <span style=\"color:#8a1624;\">{subject_id}</span>,{left_subject} {comparator} {right_subject}, Jump <span style=\"color:#8a1624;\">{op_code_debug}</span> bytes forward, Debug: <span style=\"color:#8a1624;\">{op_code[4]}</span>"
-)
+
         return f"IF - Subject ID: <span style=\"color:#8a1624;\">{subject_id}</span>,{left_subject} {comparator} {right_subject}, Jump <span style=\"color:#8a1624;\">{op_code_debug}</span> bytes forward, Debug: <span style=\"color:#8a1624;\">{op_code[4]}</span>"
 
     def __op_27_analysis(self, op_code):

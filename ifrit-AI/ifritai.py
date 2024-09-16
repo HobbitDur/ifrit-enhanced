@@ -16,12 +16,15 @@ class IfritAI(QWidget):
     MAX_OP_ID = 61
     MAX_OP_CODE_VALUE = 255
     MIN_OP_CODE_VALUE = 0
+    AI_OFFSET_LIST = ['Init code', 'Enemy turn', 'Counter-attack', 'Death', 'Before dying or taking a hit']
+
 
     def __init__(self, icon_path='Resources'):
 
         QWidget.__init__(self)
 
-        self.if_column_index = 0
+        self.current_if_index = 0
+        self.file_loaded = ""
         self.window_layout = QVBoxLayout()
         self.scroll_widget = QWidget()
         self.scroll_area = QScrollArea()
@@ -49,9 +52,22 @@ class IfritAI(QWidget):
         self.file_dialog_button.setFixedSize(30, 30)
         self.file_dialog_button.clicked.connect(self.__load_file)
 
+
+        self.reset_button = QPushButton()
+        self.reset_button.setIcon(QIcon(os.path.join(icon_path, 'reset.png')))
+        self.reset_button.setFixedSize(30, 30)
+        self.reset_button.clicked.connect(self.__reload_file)
+
+
+        self.script_section = QComboBox()
+        self.script_section.addItems(self.AI_OFFSET_LIST)
+        self.script_section.activated.connect(self.__section_change)
+
         self.layout_top = QHBoxLayout()
         self.layout_top.addWidget(self.file_dialog_button)
         self.layout_top.addWidget(self.save_button)
+        self.layout_top.addWidget(self.reset_button)
+        self.layout_top.addWidget(self.script_section)
         self.layout_top.addStretch(1)
 
         self.ai_layout = QVBoxLayout()
@@ -81,6 +97,10 @@ class IfritAI(QWidget):
     def __save_file(self):
         print("Save file")
 
+    def __section_change(self):
+        self.__clear_lines()
+        self.__setup_section_data()
+
     def __init_add_line(self):
         for i in range(len(self.add_line_button)):
             self.add_line_button[i].setText("+")
@@ -90,7 +110,7 @@ class IfritAI(QWidget):
     def __add_line(self, command):
         # First move the text if we got an END
         if command.get_id() == 35:
-            self.if_column_index -= 1
+            self.current_if_index -=1
 
         # If the line doesn't exist (so we are adding a new line not modifying one), create the layout
         if len(self.all_lines_layout) <= command.line_index:
@@ -115,9 +135,18 @@ class IfritAI(QWidget):
 
         # Add the op_id to the line layout
         self.all_lines_layout[command.line_index].addLayout(layout_id)
+
         # Create the op_code widgets
         self.__reset_op_code_widget(command)
 
+        self.__set_text_layout(command)
+
+        # If an IF command, then move next text line a bit
+        if command.get_id() == 2:  # IF
+            self.current_if_index += 1
+
+
+    def __set_text_layout(self, command):
         # Create the text widget
         frame_text = QFrame()
         frame_text.setFrameStyle(0x05)
@@ -125,13 +154,10 @@ class IfritAI(QWidget):
         command.text_widget = QLabel(command.get_text())
         layout_text = QHBoxLayout()
         layout_text.addWidget(frame_text)
-        layout_text.addSpacing(20 * self.if_column_index)
+        command.if_index = self.current_if_index
+        layout_text.addSpacing(20 * command.if_index)
         layout_text.addWidget(command.text_widget)
         self.all_lines_layout[command.line_index].addLayout(layout_text)
-
-        # If an IF command, then move next text line a bit
-        if command.get_id() == 2:  # IF
-            self.if_column_index += 1
 
     def __reset_op_code_widget(self, command):
         command.op_code_widget = []
@@ -165,19 +191,30 @@ class IfritAI(QWidget):
         command.set_op_code(op_code)
         command.text_widget.setText(command.get_text())
 
-    def __load_file(self):
+    def __load_file(self, file_to_load=None):
+
         # file_name = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat", directory=os.getcwd())[0]
         # if file_name:
         #    self.file_path = file_name
         # self.ifrit_manager.init_from_file(file_name)
-        self.ifrit_manager.init_from_file(os.path.join("OriginalFiles", "c0m028.dat"))
-        line_index = 1
+        if not file_to_load:
+            self.file_loaded = os.path.join("OriginalFiles", "c0m028.dat")
+        else:
+            self.file_loaded = file_to_load
+        self.ifrit_manager.init_from_file(self.file_loaded)
         self.__clear_lines()
-        for code_section in self.ifrit_manager.ai_data:
-            for command in code_section:
-                command.line_index = line_index
-                self.__add_line(command)
-                line_index += 1
+        self.__setup_section_data()
+
+    def __reload_file(self):
+        self.__load_file(self.file_loaded)
+
+    def __setup_section_data(self):
+        line_index = 1
+        index_section = self.AI_OFFSET_LIST.index(self.script_section.currentText())
+        for command in self.ifrit_manager.ai_data[index_section]:
+            command.line_index = line_index
+            self.__add_line(command)
+            line_index += 1
 
     def __clear_lines(self):
         for line_layout in self.all_lines_layout:
