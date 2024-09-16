@@ -25,6 +25,9 @@ class Ennemy():
         self.model_animation_data = copy.deepcopy(game_data.SECTION_MODEL_ANIM_DICT)
         self.info_stat_data = copy.deepcopy(game_data.SECTION_INFO_STAT_DICT)
         self.battle_script_data = copy.deepcopy(game_data.SECTION_BATTLE_SCRIPT_DICT)
+        self.sound_data = bytes()  # Section 9
+        self.sound_unknown_data = bytes()  # Section 10
+        self.sound_texture_data = bytes()  # Section 11
         self.list_var = [{'op_code': 20, 'var_name': 'Unknown20'},
                          {'op_code': 81, 'var_name': 'TomberryDefeated'},
                          {'op_code': 82, 'var_name': 'TomberrySrIsDefeated'},
@@ -61,9 +64,9 @@ class Ennemy():
                              {'op_code': 0x16, 'size': 0, 'func': self.__op_16_analysis},  # FUll hp
                              {'op_code': 0x17, 'size': 1, 'func': self.__op_17_analysis},  # Deactivate RUn away
                              {'op_code': 0x18, 'size': 1, 'func': self.__op_18_analysis},  # Show battle text with debug ?
-                             {'op_code': 0x19, 'size': 3, 'func': self.__op_19_analysis},  # Unknown
+                             {'op_code': 0x19, 'size': 1, 'func': self.__op_19_analysis},  # Unknown
                              {'op_code': 0x1A, 'size': 1, 'func': self.__op_1A_analysis},  # Show battle text + lock
-                             {'op_code': 0x1B, 'size': 0, 'func': self.__op_1B_analysis},  # Unknown (biggs 1)
+                             {'op_code': 0x1B, 'size': 5, 'func': self.__op_1B_analysis},  # Unknown (biggs 1)
                              {'op_code': 0x1C, 'size': 1, 'func': self.__op_1C_analysis},  # Wait text
                              {'op_code': 0x1D, 'size': 1, 'func': self.__op_1D_analysis},  # Leave ennemy
                              {'op_code': 0x1E, 'size': 1, 'func': self.__op_1E_analysis},  # Launch special action
@@ -125,8 +128,11 @@ class Ennemy():
         self.__analyze_animation_section(game_data)
         self.__analyze_info_stat(game_data)
         self.__analyze_battle_script_section(game_data, analyse_ia)
+        self.__analyze_sound_section(game_data)
+        self.__analyze_sound_unknown_section(game_data)
+        self.__analyze_texture_section(game_data)
 
-    def write_data_to_file(self, game_data, path, write_ia = True):
+    def write_data_to_file(self, game_data, path, write_ia=True):
         # First copy original file
         full_dest_path = os.path.join(path, self.origin_file_name)
         # Then load file (python make it difficult to directly modify files)
@@ -194,25 +200,26 @@ class Ennemy():
                                            self.header_data['section_pos'][8] + self.battle_script_data['offset_text_sub'] + len(value_battle)] = value_battle
                     continue  # Not setting the file_raw_data loop
                 elif param_name == 'ia_data' and write_ia:
-                    print("Writing IA info of {} file".format(self.info_stat_data['monster_name']))
+                    # Saving text
+                    save_text = self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_offset']:
+                                                   self.header_data['section_pos'][9]]
+                    list_offset = ['offset_init_code', 'offset_ennemy_turn', 'offset_counterattack', 'offset_death', 'offset_before_dying_or_hit']
+                    offset_from_ai_subsection = self.battle_script_data['offset_init_code']
+                    offset_from_current_section = 0
                     index_list_offset = 0
-                    list_offset = [self.battle_script_data['offset_init_code'], self.battle_script_data['offset_ennemy_turn'],
-                                   self.battle_script_data['offset_counterattack'], self.battle_script_data['offset_death'],
-                                   self.battle_script_data['offset_before_dying_or_hit']]
-                    ai_offset = self.header_data['section_pos'][section_position] + self.battle_script_data['offset_ai_sub']
-                    offset_code = list_offset[index_list_offset]
-                    offset_command = 0
-                    index_count = 0
                     for command in value:
                         if command['id'] == -1:  # Separator
                             index_list_offset += 1
-                            offset_code = list_offset[index_list_offset]
-                            offset_command=0
+                            offset_from_ai_subsection += offset_from_current_section
+                            if command['end']:
+                                break
+                            self.battle_script_data[list_offset[index_list_offset]] = offset_from_ai_subsection
+                            offset_from_current_section = 0
                             continue
                         command_ref = [x for x in self.list_op_code if x['op_code'] == command['id']][0]
-                        start_data = ai_offset + offset_code + offset_command
-                        end_data = ai_offset + offset_code + offset_command + command_ref['size'] + 1  # +1 for taking into account the id we are writting
-                        index_count += command_ref['size'] + 1
+                        start_data = self.header_data['section_pos'][section_position] + self.battle_script_data[
+                            'offset_ai_sub'] + offset_from_ai_subsection + offset_from_current_section
+                        end_data = start_data + command_ref['size'] + 1  # +1 for taking into account the id we are writing
                         if command['id'] == 0x02:  # IF
                             comparator = self.list_comparator.index(command['comparator'])
                             jump = command['jump']
@@ -245,8 +252,64 @@ class Ennemy():
                             value_to_set = [command['id'], command['param'][0]]
                         else:
                             value_to_set = [command['id'], *command['param']]
-                        offset_command += command_ref['size'] + 1
+                        offset_from_current_section += command_ref['size'] + 1
                         self.file_raw_data[start_data:end_data] = bytes(value_to_set)
+
+                    # Changing the section 9,10, 11 position and texts offset as we have moved everything a bit
+                    # Writing new AI offset
+                    for i, header in enumerate(game_data.SECTION_BATTLE_SCRIPT_AI_OFFSET_LIST_DATA):
+                        self.file_raw_data[
+                        self.header_data['section_pos'][8] + self.battle_script_data['offset_ai_sub'] + header['offset']:
+                        self.header_data['section_pos'][8] + self.battle_script_data['offset_ai_sub'] + header['offset'] + header['size']] = (
+                            self.battle_script_data[list_offset[i]]).to_bytes(
+                            header['size'], header['byteorder'])
+
+                    # Changing the text offset value and offset text offset value
+                    length_offset_text_offset = self.battle_script_data['offset_text_sub'] - self.battle_script_data['offset_text_offset']
+                    length_old_ia_section = self.battle_script_data['offset_text_offset'] - self.battle_script_data['offset_ai_sub']
+                    self.battle_script_data['offset_text_offset'] = self.battle_script_data['offset_ai_sub'] + offset_from_ai_subsection
+                    self.battle_script_data['offset_text_sub'] = self.battle_script_data['offset_text_offset'] + length_offset_text_offset
+                    self.file_raw_data[self.header_data['section_pos'][8] + game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB['offset']:
+                                       self.header_data['section_pos'][8] + game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB['offset'] +
+                                       game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB['size']] = self.battle_script_data[
+                        'offset_text_offset'].to_bytes(game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB['size'],
+                                                       game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_OFFSET_SUB['byteorder'])
+                    self.file_raw_data[self.header_data['section_pos'][8] + game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB['offset']:
+                                       self.header_data['section_pos'][8] + game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB['offset'] +
+                                       game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB['size']] = self.battle_script_data['offset_text_sub'].to_bytes(
+                        game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB['size'], game_data.SECTION_BATTLE_SCRIPT_HEADER_OFFSET_TEXT_SUB['byteorder'])
+
+                    # Changing the file size
+                    diff_ia_length = offset_from_ai_subsection - length_old_ia_section
+                    futur_file_size = self.header_data['file_size'] + diff_ia_length
+                    size_change = offset_from_ai_subsection - length_old_ia_section
+                    if futur_file_size > self.header_data['file_size']:
+                        self.file_raw_data.extend([0] * (futur_file_size - self.header_data['file_size']))
+                    elif futur_file_size < self.header_data['file_size']:  # If the IA have been shorter, fill with 0
+                        # Removing the last n byte
+                        self.file_raw_data = self.file_raw_data[:-(self.header_data['file_size'] - futur_file_size) or None]
+                    # Writing the new file size
+                    self.header_data['file_size'] = futur_file_size
+                    file_size_section_offset = 4 + self.header_data['nb_section'] * 4
+                    self.file_raw_data[file_size_section_offset:file_size_section_offset + game_data.SECTION_HEADER_FILE_SIZE['size']] = (
+                        self.header_data['file_size'].to_bytes(game_data.SECTION_HEADER_FILE_SIZE['size'], game_data.SECTION_HEADER_FILE_SIZE['byteorder']))
+
+                    # Writing save text
+                    self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_offset']:
+                                       self.header_data['section_pos'][8] + self.battle_script_data['offset_text_offset'] + len(save_text)] = save_text
+                    # Writing section 9 10 11
+                    new_section_9_offset = self.header_data['section_pos'][9] + size_change
+                    data = self.sound_data + self.sound_unknown_data + self.texture_data
+                    self.file_raw_data[new_section_9_offset:
+                                       new_section_9_offset + len(self.sound_data) + len(self.sound_unknown_data) + len(self.texture_data)] = data
+                    # Changing section 9 10 11 index:
+                    for i in range(9, 12):
+                        self.header_data['section_pos'][i] = self.header_data['section_pos'][i] + size_change
+                        self.file_raw_data[game_data.SECTION_HEADER_SECTION_POSITION['offset'] + (i - 1) * game_data.SECTION_HEADER_SECTION_POSITION['size']:
+                                           game_data.SECTION_HEADER_SECTION_POSITION['offset'] + game_data.SECTION_HEADER_SECTION_POSITION['size'] * (
+                                               i)] = (self.header_data['section_pos'][i]).to_bytes(game_data.SECTION_HEADER_SECTION_POSITION['size'],
+                                                                                                   game_data.SECTION_HEADER_SECTION_POSITION[
+                                                                                                       'byteorder'])
                     continue  # Not setting the file_raw_data loop
 
                 else:  # Data that we don't modify in the excel
@@ -288,6 +351,21 @@ class Ennemy():
 
     def __analyze_animation_section(self, game_data):  # Data loaded but not used or put in the excel for the moment
         self.model_animation_data['nb_animation'] = self.__get_int_value_from_info(game_data.SECTION_MODEL_ANIM_NB_MODEL, 3)
+
+    def __analyze_sound_section(self, game_data):  # Data loaded but not used or put in the excel for the moment
+        start_data = self.header_data['section_pos'][9]
+        end_data = self.header_data['section_pos'][10]
+        self.sound_data = self.file_raw_data[start_data:end_data]
+
+    def __analyze_sound_unknown_section(self, game_data):  # Data loaded but not used or put in the excel for the moment
+        start_data = self.header_data['section_pos'][10]
+        end_data = self.header_data['section_pos'][11]
+        self.sound_unknown_data = self.file_raw_data[start_data:end_data]
+
+    def __analyze_texture_section(self, game_data):  # Data loaded but not used or put in the excel for the moment
+        start_data = self.header_data['section_pos'][11]
+        end_data = self.header_data['file_size']
+        self.texture_data = self.file_raw_data[start_data:end_data]
 
     def __analyze_info_stat(self, game_data):
         SECTION_NUMBER = 7
@@ -475,7 +553,7 @@ class Ennemy():
                                     list_result.append(ret)
                         # END Managing END
                     else:
-                        result = [code[index_read]]# Reading ID
+                        result = [code[index_read]]  # Reading ID
                         index_read += 1
                         game_data.unknown_result.append(self.info_stat_data['monster_name'])
                     # Check if double stop
@@ -487,7 +565,7 @@ class Ennemy():
                         last_stop = False
                 list_result = self.__remove_stop_end(list_result)
                 self.battle_script_data['ia_data'].append(list_result)
-
+            self.battle_script_data['ia_data'].append([])  # Adding a end section that is empty to mark the end of the all IA section
 
     def __remove_stop_end(self, list_result):
         id_remove = 0
@@ -572,7 +650,7 @@ class Ennemy():
         return {'text': 'LAUNCH MAGIC DRAW', 'param': []}
 
     def __op_1B_analysis(self, op_code, game_data: GameData):
-        return {'text': 'UNKNOWN ACTION', 'param': []}
+        return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1], op_code[2], op_code[3], op_code[4]]}
 
     def __op_05_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1], op_code[2]]}
@@ -605,7 +683,7 @@ class Ennemy():
         return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1]]}
 
     def __op_19_analysis(self, op_code, game_data: GameData):
-        return {'text': 'UNKNOWN ACTION', 'param': [op_code[0], op_code[1], op_code[2]]}
+        return {'text': 'UNKNOWN ACTION', 'param': [op_code[0]]}
 
     def __op_32_analysis(self, op_code, game_data: GameData):
         return {'text': 'UNKNOWN ACTION', 'param': []}
@@ -650,7 +728,7 @@ class Ennemy():
     def __op_18_analysis(self, op_code, game_data: GameData):
         ret = self.__op_01_analysis(op_code, game_data)
         if op_code[0] != 0:
-            ret['text']+=' debug: {}'.format(str(op_code[0]))
+            ret['text'] += ' debug: {}'.format(str(op_code[0]))
         return ret
 
     def __op_31_analysis(self, op_code, game_data: GameData):
@@ -759,6 +837,9 @@ class Ennemy():
         else:
             comparator = 'UNKNOWN OPERATOR'
         if subject_id == 0:
+            left_subject = {'text': 'HP of {}'.format(target), 'param': []}
+            right_subject = {'text': '{} %'.format(op_code_value * 10), 'param': [op_code_value]}
+        elif subject_id == 1:
             left_subject = {'text': 'HP of {}'.format(target), 'param': []}
             right_subject = {'text': '{} %'.format(op_code_value * 10), 'param': [op_code_value]}
         elif subject_id == 2:

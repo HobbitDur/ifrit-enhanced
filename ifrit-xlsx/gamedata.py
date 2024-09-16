@@ -118,7 +118,7 @@ class GameData():
     COLOR_LIST = ["Darkgrey", "Grey", "Yellow", "Red", "Green", "Blue", "Purple", "White",
                   "DarkgreyBlink", "GreyBlink", "YellowBlink", "RedBlink", "GreenBlink", "BlueBlink", "PurpleBlink", "WhiteBlink"]
     LOCATION_LIST = ["Galbadia", "Esthar", "Balamb", "Dollet", "Timber", "Trabia", "Centra", "Horizon"]
-    IA_CODE_NAME_LIST = ["Initialization fight", "Ennemy turn", "Counter-Attack", "Death", "Before dying or taking a hit"]
+    IA_CODE_NAME_LIST = ["Initialization fight", "Ennemy turn", "Counter-Attack", "Death", "Before dying or taking a hit", "End"]
     ELEM_DEF_MIN_VAL = -100
     ELEM_DEF_MAX_VAL = 400
     STATUS_DEF_MIN_VAL = 0
