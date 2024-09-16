@@ -86,27 +86,40 @@
     {"op_code": 65, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown goliath (unused ?)"},
     {"op_code": 255, "size": 0, "text": "UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Default unused when op_id doesn't exist"}
 ],
- "if_subject":[
-   {"subject_id": 0, "text": "HP OF"},
-   {"subject_id": 1, "text": "HP OF"},
-   {"subject_id": 2, "text": "RANDOM VALUE"},
-   {"subject_id": 3, "text": "COMBAT SCENE"},
-   {"subject_id": 4, "text": "STATUS OF"},
-   {"subject_id": 5, "text": "STATUS OF [ALL]"},
-   {"subject_id": 6, "text": "NUMBER OF MEMBER"},
-   {"subject_id": 9, "text": "ALIVE"},
-   {"subject_id": 10, "text": "ATTACK"},
-   {"subject_id": 14, "text": "GROUP LEVEL"},
-   {"subject_id": 15, "text": "ATTACK WITH ALLY"},
-   {"subject_id": 17, "text": "STOLE GFORCE"},
-   {"subject_id": 18, "text": "ODIN ATTACK ?"},
-   {"subject_id": 19, "text": "COUNTDOWN"}
+
+   "if_subject":[
+   {"subject_id": 0,  "short_text": "HP(1?) OF",        "left_text": "HP of {}",                      "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 1,  "short_text": "HP(2?) OF",        "left_text": "HP of {}",                      "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 2,  "short_text": "RANDOM VALUE",     "left_text": "RANDOM VALUE BETWEEN 0 AND {}", "complexity": "simple",  "param_left_type": "int"},
+   {"subject_id": 3,  "short_text": "COMBAT SCENE",     "left_text": "COMBAT SCENE",                  "complexity": "simple",  "param_left_type": ""},
+   {"subject_id": 4,  "short_text": "STATUS OF",        "left_text": "STATUS OF {}",                  "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 5,  "short_text": "STATUS OF [ALL]",  "left_text": "STATUS OF {}",                  "complexity": "simple",  "param_left_type": "target_reverse"},
+   {"subject_id": 6,  "short_text": "NUMBER OF MEMBER", "left_text": "NUMBER OF MEMBER OF {}",        "complexity": "simple",  "param_left_type": "target_reverse"},
+   {"subject_id": 9,  "short_text": "ALIVE",            "left_text": "ALIVE",                         "complexity": "simple",  "param_left_type": ""},
+   {"subject_id": 10, "short_text": "ATTACK",           "left_text": "ATTACKER",                      "complexity": "complex", "param_left_type": ""},
+   {"subject_id": 14, "short_text": "GROUP LEVEL",      "left_text": "GROUP LEVEL {}",                "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 15, "short_text": "ATTACK WITH ALLY", "left_text": "{} CAN ATTACK WITH HIS ALLY",   "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 17, "short_text": "STOLE GFORCE",     "left_text": "GFORCE STOLEN (TARGET: {})",    "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 18, "short_text": "ODIN ATTACK ?",    "left_text": "ODIN ATTACK TO TARGET {}",      "complexity": "simple",  "param_left_type": "target"},
+   {"subject_id": 19, "short_text": "COUNTDOWN",        "left_text": "COUNTDOWN",                     "complexity": "simple",  "param_left_type": "" }
+
   ],
    "subject_left_10":[
-   {"subject_id": 0, "text": "ATTACKER WAS TEAM MEMBER N°"},
-   {"subject_id": 1, "text": "ATTACKER IS"},
-   {"subject_id": 3, "text": "LAST ATTACKER WAS OF TYPE"},
-   {"subject_id": 4, "text": ["LAST GFORCE LAUNCH WAS","LAST ACTION LAUNCH WAS"]},
-   {"subject_id": 5, "text": "LAST ATTACK WAS OF ELEMENT"}
+   {"param_id": 0, "text": "ATTACKER WAS TEAM MEMBER N°"},
+   {"param_id": 1, "text": "ATTACKER IS"},
+   {"param_id": 3, "text": "LAST ATTACKER WAS OF TYPE"},
+   {"param_id": 4, "text": ["LAST GFORCE LAUNCH WAS","LAST ACTION LAUNCH WAS"]},
+   {"param_id": 5, "text": "LAST ATTACK WAS OF ELEMENT"}
+  ],
+  "target_special": [
+    {"param_id": 200, "text": "{}", "param_type": "reverse", "comment":  ""},
+    {"param_id": 201, "text": "RANDOM ENNEMY", "param_type": "", "comment":  ""},
+    {"param_id": 202, "text": "LAST ENNEMY TO HAVE ATTACK", "param_type": "", "comment":  ""},
+    {"param_id": 203, "text": "ALL ENNEMY", "param_type": "", "comment":  ""},
+    {"param_id": 204, "text": "ALL ALLY", "param_type": "", "comment":  ""},
+    {"param_id": 205, "text": "UNKNOWN", "param_type": "", "comment":  ""},
+    {"param_id": 206, "text": "ALLY OR {} RANDOMLY", "param_type": "monster_name", "comment":  "Arconada"},
+    {"param_id": 207, "text": "RANDOM ENNEMY", "param_type": "", "comment":  "Marsupial with meteor"},
+    {"param_id": 208, "text": "NEW ALLY", "param_type": "", "comment":  "Shiva"}
   ]
 }

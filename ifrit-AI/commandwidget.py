@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal, QSignalBlocker
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QSpinBox, QFrame, QSizePolicy, QLabel, QComboBox
 
 from command import Command
@@ -78,7 +78,6 @@ class CommandWidget(QWidget):
         self.layout_text_spacing.addSpacing(if_index * 20)
 
     def change_expert(self, expert_chosen):
-        print("Change expert")
         self.expert_chosen = expert_chosen
         self.__reset_op_code_widget()
 
@@ -89,7 +88,7 @@ class CommandWidget(QWidget):
         self.op_id_changed_signal_emitter.op_id_signal.emit()
 
     def __op_code_change(self):
-        print("op_code_changed")
+        print("op_code_change")
         op_code = []
 
         for i in range(0, len(self.command.get_op_code())):
@@ -100,40 +99,55 @@ class CommandWidget(QWidget):
                                 x['data'] == self.widget_op_code[i].currentText()][0])
             except:
                 print("Unexpected widget with type: {}".format(type(self.widget_op_code[i])))
-        print(self.command.get_id())
-        print(op_code)
         self.command.set_op_code(op_code)
         self.widget_text.setText(self.command.get_text())
+        if self.command.get_id() == 2:  # If an if, reset the left condition as it can change of type
+            self.__reset_op_code_widget((1,))
+        print("end op_code_change")
 
-    def __reset_op_code_widget(self):
-        for widget in self.widget_op_code:
-            widget.setParent(None)
-            widget.deleteLater()
-        self.widget_op_code = []
-        for i in range(self.MAX_COMMAND_PARAM):
+    def __reset_op_code_widget(self, list_to_reset=()):
+        if not list_to_reset:
+            list_to_reset = range(self.MAX_COMMAND_PARAM)
+        else:
+            print("FROM RESET")
+        print(self.command)
+
+        print("List to reset")
+        print(list_to_reset)
+        print(self.widget_op_code)
+        for i in list_to_reset:
+            print(i)
+            if i < len(self.widget_op_code):
+                self.widget_op_code[i].setParent(None)
+                self.widget_op_code[i].deleteLater()
+                del self.widget_op_code[i]
+                #print("Size layout: {}".format( self.layout_op_code.count()))
+                self.layout_op_code.takeAt(i)
+                #print("Size layout: {}".format(self.layout_op_code.count()))
+            print(self.widget_op_code)
             if not self.expert_chosen and self.command.param_possible_list and len(
                     self.command.param_possible_list) > i and self.command.param_possible_list[i]:
-                if self.command.line_index == 0:
-                    print("QCombo box !!")
-                    print(i)
-                    print(len(self.command.param_possible_list))
-                    print(self.expert_chosen)
-                    print(self.command.line_index)
-                    print(self.command.param_possible_list)
-                    print(self.command.param_possible_list[i])
-                self.widget_op_code.append(QComboBox())
+                print("Combo !")
+                self.widget_op_code.insert(i, QComboBox())
+                print(self.widget_op_code)
                 items = []
                 current_text = ""
                 for el in self.command.param_possible_list[i]:
                     if i < len(self.command.get_op_code()) and el['id'] == self.command.get_op_code()[i]:
                         current_text = el['data']
                     items.append(el["data"])
-
+                print(self.widget_op_code)
                 self.widget_op_code[i].addItems(items)
                 self.widget_op_code[i].setCurrentText(current_text)
+                self.widget_op_code[i].view().setMinimumWidth(self.__get_largest_size_from_combobox(self.widget_op_code[i]) + 40)
+                self.widget_op_code[i].setFixedSize(80, 30)
                 self.widget_op_code[i].currentIndexChanged.connect(self.__op_code_change)
+                print(self.widget_op_code)
             else:
-                self.widget_op_code.append(QSpinBox())
+                print("Spin !")
+                self.widget_op_code.insert(i, QSpinBox())
+                print(self.widget_op_code)
+                self.widget_op_code[i].setFixedSize(50, 30)
                 self.widget_op_code[i].setMaximum(self.MAX_OP_CODE_VALUE)
                 self.widget_op_code[i].setMinimum(self.MIN_OP_CODE_VALUE)
                 self.widget_op_code[i].wheelEvent = lambda event: None
@@ -143,7 +157,9 @@ class CommandWidget(QWidget):
                 else:
                     self.widget_op_code[i].setValue(0)
                 self.widget_op_code[i].valueChanged.connect(self.__op_code_change)
-            if self.expert_chosen:
+            if i > 5:  # Only if has more than 5 parameters
+                self.widget_op_code[i].setFixedSize(50, 30)
+            elif self.expert_chosen:
                 self.widget_op_code[i].setFixedSize(50, 30)
             else:
                 self.widget_op_code[i].setFixedSize(80, 30)
@@ -153,5 +169,12 @@ class CommandWidget(QWidget):
                 self.widget_op_code[i].setSizePolicy(retain_policy)
                 self.widget_op_code[i].hide()
 
-        for widget in self.widget_op_code:
-            self.layout_op_code.addWidget(widget)
+            self.layout_op_code.insertWidget(i, self.widget_op_code[i])
+            print("Size layout: {}".format(self.layout_op_code.count()))
+
+    def __get_largest_size_from_combobox(self, combo_box: QComboBox):
+        largest = 0
+        for i in range(combo_box.count()):
+            if QLabel(combo_box.itemText(i)).fontMetrics().boundingRect(combo_box.itemText(i)).width() > largest:
+                largest = QLabel(combo_box.itemText(i)).fontMetrics().boundingRect(combo_box.itemText(i)).width()
+        return largest
