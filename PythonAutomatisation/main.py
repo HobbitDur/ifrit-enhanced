@@ -610,6 +610,6 @@ if __name__ == "__main__":
         for file in glob.glob(os.path.join(FILE_OUTPUT_BATTLE, "battle.*")):
             shutil.copy(file, args.copy)
         for file in glob.glob(os.path.join(FILE_MONSTER_OUTPUT_PATH, "*.*")):
-            shutil.copy(file, os.path.join (args.copy, '..', '..', 'direct', 'battle'))
+            shutil.copy(file, os.path.join (args.copy, 'direct', 'battle'))
     if args.open:
         os.startfile(FILE_XLSX)
