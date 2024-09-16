@@ -148,7 +148,7 @@ class GameData():
         self.__init_hex_to_str_table()
 
     def load_ai_data(self, file_path):
-        with open(file_path) as f:
+        with open(file_path, encoding="utf8") as f:
             self.ai_data_json = json.load(f)
 
     def __init_hex_to_str_table(self):
