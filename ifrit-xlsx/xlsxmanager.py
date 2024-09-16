@@ -29,6 +29,9 @@ ROW_MONSTER_COMBAT_TEXT = 4
 ROW_BYTE_FLAG = 8
 ROW_RENZOKUKEN = 41
 
+ROW_LEGEND = 25
+COL_LEGEND = 0
+
 COL_SHEET_LOW_LVL = 1
 COL_SHEET_MED_LVL = 3
 COL_SHEET_HIGH_LVL = 5
@@ -73,6 +76,8 @@ class DatToXlsx():
         self.column_title_style = self.workbook.add_format({'bold': True, 'border': 1, 'bg_color': '#b2b2b2', 'align': 'center'})
         self.border_style = self.workbook.add_format({'border': 1})
         self.border_center_style = self.workbook.add_format({'border': 1, 'align':'center'})
+        self.not_modified_style = self.workbook.add_format({'border': 1, 'bg_color': '#DA9694'})
+        self.danger_style = self.workbook.add_format({'border': 1, 'bg_color': 'red'})
         self.border_center_bold_style = self.workbook.add_format({'border': 1, 'align':'center','bold': True,})
         self.border_center_yellow_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'yellow'})
         self.border_center_green_style = self.workbook.add_format({'border': 1, 'align':'center', 'bg_color':'green'})
@@ -261,12 +266,12 @@ class DatToXlsx():
             # File info not link to the monster data
             worksheet.write(ROW_FILE_DATA, COL_FILE_DATA, "File data", self.column_title_style)
             worksheet.write(ROW_FILE_DATA + 1, COL_FILE_DATA, "Original file name", self.row_title_style)
-            worksheet.write(ROW_FILE_DATA + 1, COL_FILE_DATA + 1, key, self.border_style)
+            worksheet.write(ROW_FILE_DATA + 1, COL_FILE_DATA + 1, key, self.not_modified_style)
 
             # Graph level
             worksheet.write(ROW_GRAPH_PER_LVL, COL_GRAPH_PER_LVL, "Level", self.column_title_style)
             for i in range(1, 101):
-                worksheet.write(ROW_GRAPH_PER_LVL + i, COL_GRAPH_PER_LVL, i, self.row_title_style)
+                worksheet.write(ROW_GRAPH_PER_LVL + i, COL_GRAPH_PER_LVL, i, self.not_modified_style)
 
             # Index setting
             row_index = {}
@@ -283,11 +288,11 @@ class DatToXlsx():
             index['status_def'] = 0
             # General Monster info
             worksheet.write(ROW_MONSTER_LVL, COL_MONSTER_INFO, "Monster LVL", self.row_title_style)
-            worksheet.write(ROW_MONSTER_LVL, COL_MONSTER_INFO + 1, DEFAULT_MONSTER_LVL, self.border_style)
+            worksheet.write(ROW_MONSTER_LVL, COL_MONSTER_INFO + 1, DEFAULT_MONSTER_LVL, self.not_modified_style)
             worksheet.write(ROW_MONSTER_NAME, COL_MONSTER_INFO, "Name", self.row_title_style)
             worksheet.write(ROW_MONSTER_NAME, COL_MONSTER_INFO + 1, ennemy.info_stat_data['monster_name'], self.border_style)
             worksheet.write(ROW_MONSTER_NB_ANIMATION, COL_MONSTER_INFO, "Nb animation", self.row_title_style)
-            worksheet.write(ROW_MONSTER_NB_ANIMATION, COL_MONSTER_INFO + 1, ennemy.model_animation_data['nb_animation'], self.border_style)
+            worksheet.write(ROW_MONSTER_NB_ANIMATION, COL_MONSTER_INFO + 1, ennemy.model_animation_data['nb_animation'], self.danger_style)
 
             for i in range(len(ennemy.battle_script_data['battle_text'])):
                 worksheet.write(ROW_MONSTER_COMBAT_TEXT + i, COL_MONSTER_INFO, "Combat text {}".format(i), self.row_title_style)
@@ -324,21 +329,21 @@ class DatToXlsx():
                             stat_cell[0] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 1) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'],
                                             '=FLOOR({}*({}*{}/20+{}),1)'.format(stat_cell[0], monster_lvl_cell, monster_lvl_cell, monster_lvl_cell),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Impact 2
                             stat_cell[1] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 2) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 1, '=10*{}'.format(stat_cell[1]), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 1, '=10*{}'.format(stat_cell[1]), self.not_modified_style)
                             # Impact 3
                             stat_cell[2] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 3) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}*100*{}'.format(stat_cell[2], monster_lvl_cell), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}*100*{}'.format(stat_cell[2], monster_lvl_cell), self.not_modified_style)
                             # Impact 4
                             stat_cell[3] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 4) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 3, '=1000*{}'.format(stat_cell[3]), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 3, '=1000*{}'.format(stat_cell[3]), self.not_modified_style)
                             # Total Sum
                             worksheet.write(row_index['stat'], column_index['stat'] + 4,
                                             '=SUM({}:{})'.format(xlsxwriter.utility.xl_col_to_name(COL_STAT + 5) + str(row_index['stat'] + 1),
                                                                  xlsxwriter.utility.xl_col_to_name(COL_STAT + 8) + str(row_index['stat'] + 1)),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Total Formula
                             # The HP is harder to show on a graph, so we divide it by 100 to show it better
                             worksheet.write(ROW_GRAPH_PER_LVL, column_index['graph_stat'], pretty_name, self.column_title_style)
@@ -347,62 +352,62 @@ class DatToXlsx():
                                 # i corresponding to the monster level
                                 # /101 because HP is too high to be plot correctly with others values.
                                 str_formula = self.__hp_excel_formula(stat_cell, monster_lvl_cell)
-                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.border_style)
+                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.not_modified_style)
 
                         elif param_name == 'str' or param_name == 'mag':
                             # Impact 1
                             stat_cell[0] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 1) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'], '=FLOOR({}*{}/40, 1)'.format(monster_lvl_cell, stat_cell[0]),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Impact 2
                             stat_cell[1] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 2) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'] + 1, '=FLOOR({}/(4*{}),1)'.format(monster_lvl_cell, stat_cell[1]),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Impact 3
                             stat_cell[2] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 3) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '=FLOOR({}/4,1)'.format(stat_cell[2]), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '=FLOOR({}/4,1)'.format(stat_cell[2]), self.not_modified_style)
                             # Impact 4
                             stat_cell[3] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 4) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'] + 3,
-                                            '=FLOOR({}*{}/(8*{}),1)'.format(monster_lvl_cell, monster_lvl_cell, stat_cell[3]), self.border_style)
+                                            '=FLOOR({}*{}/(8*{}),1)'.format(monster_lvl_cell, monster_lvl_cell, stat_cell[3]), self.not_modified_style)
                             # Total
                             worksheet.write(row_index['stat'], column_index['stat'] + 4,
                                             '=SUM({}:{})'.format(xlsxwriter.utility.xl_col_to_name(COL_STAT + 5) + str(row_index['stat'] + 1),
                                                                  xlsxwriter.utility.xl_col_to_name(COL_STAT + 8) + str(row_index['stat'] + 1)),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Total Formula
                             for i in range(1, 101):
                                 monster_lvl_cell = xlsxwriter.utility.xl_col_to_name(COL_GRAPH_PER_LVL) + str(ROW_GRAPH_PER_LVL + i + 1)
                                 # i corresponding to the monster level
                                 str_formula = self.__str_excel_formula(stat_cell, monster_lvl_cell)
-                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.border_style)
+                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.not_modified_style)
                         elif param_name == 'vit' or param_name == 'spr' or param_name == 'spd' or param_name == 'eva':
                             # Impact 1
                             stat_cell[0] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 1) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'], '={}*{}'.format(monster_lvl_cell, stat_cell[0]), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'], '={}*{}'.format(monster_lvl_cell, stat_cell[0]), self.not_modified_style)
                             # Impact 2
                             stat_cell[1] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 2) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'] + 1, '=FLOOR({}/{},1)'.format(monster_lvl_cell, stat_cell[1]),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Impact 3
                             stat_cell[2] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 3) + str(row_index['stat'] + 1)
-                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}'.format(stat_cell[2]), self.border_style)
+                            worksheet.write(row_index['stat'], column_index['stat'] + 2, '={}'.format(stat_cell[2]), self.not_modified_style)
                             # Impact 4
                             stat_cell[3] = xlsxwriter.utility.xl_col_to_name(COL_STAT + 4) + str(row_index['stat'] + 1)
                             worksheet.write(row_index['stat'], column_index['stat'] + 3, '=-FLOOR({}/{},1)'.format(monster_lvl_cell, stat_cell[3]),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Total
                             worksheet.write(row_index['stat'], column_index['stat'] + 4,
                                             '=SUM({}:{})'.format(xlsxwriter.utility.xl_col_to_name(COL_STAT + 5) + str(row_index['stat'] + 1),
                                                                  xlsxwriter.utility.xl_col_to_name(COL_STAT + 8) + str(row_index['stat'] + 1)),
-                                            self.border_style)
+                                            self.not_modified_style)
                             # Total Formula
                             for i in range(1, 101):
                                 monster_lvl_cell = xlsxwriter.utility.xl_col_to_name(COL_GRAPH_PER_LVL) + str(ROW_GRAPH_PER_LVL + i + 1)
                                 # i corresponding to the monster level
                                 str_formula = '={}*{}+FLOOR({}/{},1)+{}-FLOOR({}/{},1)'.format(monster_lvl_cell, stat_cell[0], monster_lvl_cell, stat_cell[1],
                                                                                                stat_cell[2], monster_lvl_cell, stat_cell[3])
-                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.border_style)
+                                worksheet.write(ROW_GRAPH_PER_LVL + i, column_index['graph_stat'], str_formula, self.not_modified_style)
 
                         row_index['stat'] += 1
                         column_index['graph_stat'] += 1
@@ -519,6 +524,14 @@ class DatToXlsx():
                 except IndexError as e:
                     raise IndexError("Unknown error on file {} for monster name {}: {}".format(key, ennemy.info_stat_data['monster_name'], e))
                 # Looping on byte flag
+
+            # Legend
+            worksheet.write(ROW_LEGEND, COL_LEGEND, 'Legends', self.column_title_style)
+            worksheet.write(ROW_LEGEND + 1, COL_LEGEND, '', self.not_modified_style)
+            worksheet.write(ROW_LEGEND+1, COL_LEGEND+1, 'Not written back to .dat file, just for info vizualisation', self.border_style)
+            worksheet.write(ROW_LEGEND + 2, COL_LEGEND, '', self.danger_style)
+            worksheet.write(ROW_LEGEND+2, COL_LEGEND+1, 'Modified, but risky ! Modified at your own risk', self.border_style)
+
             # IA
             list_title_text = ["Initialization fight", "Ennemy turn", "Counter-Attack", "Death", "Before dying or taking a hit"]
             list_format_color=[self.border_center_yellow_style, self.border_center_green_style, self.border_center_orange_style,
