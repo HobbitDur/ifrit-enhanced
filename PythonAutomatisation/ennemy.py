@@ -95,17 +95,15 @@ class Ennemy():
 
             self.data.append({'name': el['name'], 'value': value, 'pretty_name': el['pretty_name']})
 
-    def write_data_to_file(self, game_data, origin_path, dest_path):
+    def write_data_to_file(self, game_data, path):
         # First copy original file
-        for f in glob.glob(os.path.join(dest_path, self.origin_file_name)):
-            os.remove(f)
-        full_origin_path = os.path.join(origin_path, self.origin_file_name)
-        full_dest_path = os.path.join(dest_path, self.origin_file_name)
-        shutil.copy(full_origin_path, full_dest_path)
+        full_dest_path = os.path.join(path, self.origin_file_name)
+
 
         # Then load file (python make it difficult to directly modify files)
         self.load_file_data(full_dest_path, game_data)
 
+        # Then modify loaded file
         for el in self.data:
             property_elem = [x for ind, x in enumerate(game_data.LIST_DATA) if x['name'] == el['name']][0]
             if el['name'] in (game_data.stat_values + ['card', 'devour', 'abilities']):  # List
@@ -113,22 +111,22 @@ class Ennemy():
             elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
                 value_to_set = el['value'].to_bytes()
             elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
-                value_to_set=[]
+                value_to_set = []
                 for el2 in el['value']:
                     value_to_set.append(el2['ID'])
                     value_to_set.append(el2['value'])
                 value_to_set = bytes(value_to_set)
             elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
-                value_to_set = floor(el['value'] *256/100).to_bytes()
+                value_to_set = floor(el['value'] * 256 / 100).to_bytes()
             elif el['name'] in ['elem_def']:  # Case with elem
                 value_to_set = []
                 for i in range(len(el['value'])):
-                    value_to_set.append(floor((900 - el['value'][i])/ 10))
+                    value_to_set.append(floor((900 - el['value'][i]) / 10))
                 value_to_set = bytes(value_to_set)
             elif el['name'] in ['status_def']:  # Case with elem
                 value_to_set = []
                 for i in range(len(el['value'])):
-                    value_to_set.append(el['value'][i]+100)
+                    value_to_set.append(el['value'][i] + 100)
                 value_to_set = bytes(value_to_set)
 
             if value_to_set:
