@@ -198,13 +198,7 @@ def dat_to_xlsx(file_list):
 
     print("Getting game data")
     game_data = GameData()
-    game_data.load_card_data("Ressources/card.txt")
-    game_data.load_devour_data("Ressources/devour.txt")
-    game_data.load_magic_data("Ressources/magic.txt")
-    game_data.load_item_data("Ressources/item.txt")
-    game_data.load_status_data("Ressources/status.txt")
-    game_data.load_magic_type_data("Ressources/magic_type.txt")
-    game_data.load_stat_data("Ressources/stat.txt")
+    game_data.load_all()
 
     print("Reading ennemy files")
     for file in file_list:
@@ -304,13 +298,7 @@ def xlsx_to_dat(xlsx_file):
 
     print("Getting game data")
     game_data = GameData()
-    game_data.load_card_data("Ressources/card.txt")
-    game_data.load_devour_data("Ressources/devour.txt")
-    game_data.load_magic_data("Ressources/magic.txt")
-    game_data.load_item_data("Ressources/item.txt")
-    game_data.load_status_data("Ressources/status.txt")
-    game_data.load_magic_type_data("Ressources/magic_type.txt")
-    game_data.load_stat_data("Ressources/stat.txt")
+    game_data.load_all()
 
     print("Importing data from xlsx")
     import_from_xlsx(xlsx_file, ennemy, game_data)
