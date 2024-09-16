@@ -1,7 +1,7 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C# Express 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ifrit", "Ifrit.csproj", "{A20143EE-F9FC-4B71-A8D6-434E5D1D6D4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ifrit", "Ifrit.csproj", "{A20143EE-F9FC-4B71-A8D6-434E5D1D6D4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
