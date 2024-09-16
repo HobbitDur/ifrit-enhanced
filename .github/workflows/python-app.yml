@@ -71,7 +71,7 @@ jobs:
         run: |
           ls -al "${{ github.workspace }}"
           ls -al "${{ github.workspace }}/release"
-          ls -al "${{ github.workspace }}/ifrit-enhanced"
+          ls -al "${{ github.workspace }}/release/ifrit-enhanced"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
