@@ -37,11 +37,43 @@ jobs:
       - install_python_dependencies
       steps:
       - uses: actions/checkout@v4
-      - name: Create package
-        run: |
-           chmod +x ./create_release.sh
-           ./create_release.sh
+      - name: Create xlsx release
         shell: bash
+        run: |
+          cd ifrit-xlsx/
+          pyinstaller -n ifrit-xlsx -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages main.py;
+          cp -r Resources/ release/;
+          rm -rf OriginalFiles/decompressed_battle ;
+          mkdir -p release/OriginalFiles/;
+          cp OriginalFiles/en_battle/battle.* release/OriginalFiles;
+          rm -r release/build
+          cd ..
+      - name: Create ai release
+        shell: bash
+        run: |
+          cd ifrit-AI/
+          pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
+          mkdir -p release/OriginalFiles/;
+          cp -r Resources/ release/;
+          cp -r OriginalFiles/ release/;
+          rm -r release/build
+          cd ..
+      - name: Create full release
+        shell: bash
+        run: |
+          mkdir -p release/ifrit-enhanced-0.x; 
+          mkdir -p release/ifrit-enhanced-0.x/ifrit-gui;
+          mkdir -p release/ifrit-enhanced-0.x/ifrit-ai;
+          mkdir -p release/ifrit-enhanced-0.x/ifrit-xlsx;
+          cp -R ifrit-ai/release/* release/ifrit-enhanced-0.x/ifrit-ai/;
+          cp -R ifrit-xlsx/release/* release/ifrit-enhanced-0.x/ifrit-xlsx/;
+          cp -R ifrit-gui/publish/* release/ifrit-enhanced-0.x/ifrit-gui/;
+          rm -rf ifrit-ai/release;
+          rm -rf ifrit-xlsx/release;
+          cd release/ifrit-enhanced-0.x;
+          zip a -tzip ../ifrit-enhanced-0.x.zip .;
+          cd ..;
+          rm -r ifrit-enhanced-0.x
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
