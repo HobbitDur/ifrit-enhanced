@@ -243,7 +243,8 @@ ModelManifest.xml
 
 **/.idea
 
-**/OutputFiles/
+**/OutputFiles/**
 **/__pycache__/
 **/decompressed_battle/
 **/release
+**/decompressed_battle

@@ -1,1 +1,0 @@
-venv/Scripts/pyinstaller.exe -n HobbitInstaller -F --specpath release/build --distpath release --workpath release/build --paths .venv/Lib/site-packages --hidden-import patool main.py
