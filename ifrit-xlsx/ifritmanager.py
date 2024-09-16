@@ -113,7 +113,8 @@ class IfritManager():
             # Copying files from Input to Output before modifying
             os.makedirs(self.FILE_OUTPUT_BATTLE, exist_ok=True)
             os.makedirs(FILE_MONSTER_OUTPUT_PATH, exist_ok=True)
-            shutil.copytree(FILE_MONSTER_INPUT_PATH, FILE_MONSTER_OUTPUT_PATH, dirs_exist_ok=True)
+            if os.path.exists(self.FILE_INPUT_BATTLE): # If input file exist, copy from there. If not, means we use the output files directly.
+                shutil.copytree(FILE_MONSTER_INPUT_PATH, FILE_MONSTER_OUTPUT_PATH, dirs_exist_ok=True)
 
             print("-------Transforming XLSX to dat-------")
             self.xlsx_to_dat(FILE_MONSTER_OUTPUT_PATH, xlsx_to_dat_mananager, local_limit_option, local_analyse_ia)
