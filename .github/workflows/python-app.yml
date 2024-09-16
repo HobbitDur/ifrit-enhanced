@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "artifact-${{ github.sha }}"
-          path: ${{ github.workspace }}/release/ifrit-enhanced*/*
+          path: ${{ github.workspace }}/release/*
   release_assets:
     name: Release
     needs:
