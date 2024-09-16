@@ -82,8 +82,8 @@ class IfritManager():
             local_delete = delete_option
             local_analyse_ia = analyse_ia
 
-        xlsx_to_dat_mananager = XlsxToDat(self.FILE_XLSX)
-        dat_to_xlsx_mananager = DatToXlsx(self.FILE_XLSX)
+
+
 
         FILE_BATTLE_SPECIAL_PATH_FORMAT = os.path.join(local_lang, "battle")
         FILE_MONSTER_INPUT_PATH = os.path.join(self.FILE_INPUT_BATTLE,
@@ -93,7 +93,7 @@ class IfritManager():
         FILE_MONSTER_OUTPUT_REGEX = os.path.join(FILE_MONSTER_OUTPUT_PATH, "c0m*.dat")
 
         if local_launch_option == "fs_to_xlsx" or local_launch_option == "both":
-
+            dat_to_xlsx_mananager = DatToXlsx(self.FILE_XLSX)
             if not local_no_pack:
                 print("-------Unpacking fs file-------")
                 fshandler.unpack(self.FOLDER_INPUT, self.FILE_INPUT_BATTLE)
@@ -109,6 +109,7 @@ class IfritManager():
             self.dat_to_xlsx(file_monster, dat_to_xlsx_mananager, local_analyse_ia)
 
         if local_launch_option == "xlsx_to_fs" or local_launch_option == "both":
+            xlsx_to_dat_mananager = XlsxToDat(self.FILE_XLSX)
             print("-------Copying files from input to output-------")
             # Copying files from Input to Output before modifying
             os.makedirs(self.FILE_OUTPUT_BATTLE, exist_ok=True)
@@ -173,7 +174,7 @@ class IfritManager():
             # print("Creating checksum file")
             # self.create_checksum_file(monster, "checksum_origin_file.txt")
             print("Writing to xlsx file")
-            dat_xlsx_manager.export_to_xlsx(monster, file_name, game_data)
+            dat_xlsx_manager.export_to_xlsx(monster, file_name, game_data, analyse_ia)
 
         dat_xlsx_manager.create_ref_data(game_data)
 

@@ -236,7 +236,7 @@ class DatToXlsx():
                                   column_index + 1,
                                   {'validate': 'list', 'source': source_str})
 
-    def export_to_xlsx(self, ennemy: Ennemy, file_name, game_data: GameData):
+    def export_to_xlsx(self, ennemy: Ennemy, file_name, game_data: GameData, analyse_ia=True):
         # Chart
         ## Stat chart
         chart_stat = {}
@@ -532,97 +532,98 @@ class DatToXlsx():
         worksheet.write(ROW_LEGEND + 2, COL_LEGEND + 1, 'Modified, but risky ! Modified at your own risk', self.border_style)
 
         # IA
-        list_title_text = game_data.IA_CODE_NAME_LIST
-        list_format_color = [self.border_center_yellow_style, self.border_center_green_style, self.border_center_orange_style,
-                             self.border_center_pink_style, self.border_center_lime_style, self.border_center_blue_style, self.border_center_magenta_style,
-                             self.border_center_silver_style, self.border_center_cyan_style]
-        index_title = 0
-        last_was_end = False
-        last_was_else0 = False
-        row_index['ia_data'] = ROW_IA
-        for code_index, code_section in enumerate(ennemy.battle_script_data['ia_data']):
-            worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
-                                  ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 20) + str(row_index['ia_data']),
-                                  list_title_text[code_index], cell_format=self.column_title_style)
-            col_ia_index_ref = COL_ABILITIES
-            for ia_data in code_section:
-                format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
-                col_ia_index = col_ia_index_ref
-                if ia_data['id'] == 2:  # IF
-                    if last_was_else0:
-                        col_ia_index_ref -=1
-                        col_ia_index -=1
-                        format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
-                    worksheet.write(row_index['ia_data'], col_ia_index, 'IF condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['if_text'], format_color)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Subject ID', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['subject_id'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 2, 'Left condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 2, ia_data['left_subject']['text'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 3, 'Comparator', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 3, ia_data['comparator'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 4, 'Right condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 4, ia_data['right_subject']['text'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 5, 'THEN condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 5, ia_data['then_text'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 6, 'Left condition param (200 = not used)', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 6, ia_data['left_param'][0], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 7, 'Right condition param', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 7, ia_data['right_param'][0], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 8, 'Jump param', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 8, ia_data['jump'][0], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 9, 'Debug param', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 9, ia_data['debug'], self.border_center_style)
-                    col_ia_index_ref += 1  # One cell moving to indent
-                    last_was_end = False
-                    last_was_else0 = False
-                elif ia_data['id'] == 0:  # STOP
-                    worksheet.write(row_index['ia_data'], col_ia_index, 'STOP condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
-                    last_was_end = False
-                    last_was_else0 = False
-                elif ia_data['id'] == 35:  # ENDIF/ELSE
-                    col_ia_index_ref -= 1
-                    if ia_data['text'] == 'ELSE' and last_was_end and ia_data['param'][0]==0 :
-                        col_ia_index_ref += 1
-                    col_ia_index = col_ia_index_ref
+        if analyse_ia:
+            list_title_text = game_data.IA_CODE_NAME_LIST
+            list_format_color = [self.border_center_yellow_style, self.border_center_green_style, self.border_center_orange_style,
+                                 self.border_center_pink_style, self.border_center_lime_style, self.border_center_blue_style, self.border_center_magenta_style,
+                                 self.border_center_silver_style, self.border_center_cyan_style]
+            index_title = 0
+            last_was_end = False
+            last_was_else0 = False
+            row_index['ia_data'] = ROW_IA
+            for code_index, code_section in enumerate(ennemy.battle_script_data['ia_data']):
+                worksheet.merge_range(xlsxwriter.utility.xl_col_to_name(COL_ABILITIES) + str(row_index['ia_data']) +
+                                      ":" + xlsxwriter.utility.xl_col_to_name(COL_ABILITIES + 20) + str(row_index['ia_data']),
+                                      list_title_text[code_index], cell_format=self.column_title_style)
+                col_ia_index_ref = COL_ABILITIES
+                for ia_data in code_section:
                     format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
-                    worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
-                    col_ia_index += 1
-                    for index, param in enumerate(ia_data['param']):
-                        worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
-                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
+                    col_ia_index = col_ia_index_ref
+                    if ia_data['id'] == 2:  # IF
+                        if last_was_else0:
+                            col_ia_index_ref -=1
+                            col_ia_index -=1
+                            format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'IF condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['if_text'], format_color)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Subject ID', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['subject_id'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 2, 'Left condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 2, ia_data['left_subject']['text'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 3, 'Comparator', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 3, ia_data['comparator'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 4, 'Right condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 4, ia_data['right_subject']['text'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 5, 'THEN condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 5, ia_data['then_text'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 6, 'Left condition param (200 = not used)', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 6, ia_data['left_param'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 7, 'Right condition param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 7, ia_data['right_param'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 8, 'Jump param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 8, ia_data['jump'][0], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 9, 'Debug param', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 9, ia_data['debug'], self.border_center_style)
+                        col_ia_index_ref += 1  # One cell moving to indent
+                        last_was_end = False
+                        last_was_else0 = False
+                    elif ia_data['id'] == 0:  # STOP
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'STOP condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
+                        last_was_end = False
+                        last_was_else0 = False
+                    elif ia_data['id'] == 35:  # ENDIF/ELSE
+                        col_ia_index_ref -= 1
+                        if ia_data['text'] == 'ELSE' and last_was_end and ia_data['param'][0]==0 :
+                            col_ia_index_ref += 1
+                        col_ia_index = col_ia_index_ref
+                        format_color = list_format_color[(col_ia_index_ref - COL_ABILITIES) % len(list_format_color)]
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'NEXT condition', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['text'], format_color)
                         col_ia_index += 1
-                    if ia_data['text'] == 'ELSE':
-                        col_ia_index_ref += 1
-                        if ia_data['param'][0] == 0:
-                            last_was_else0 = True
+                        for index, param in enumerate(ia_data['param']):
+                            worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
+                            worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
+                            col_ia_index += 1
+                        if ia_data['text'] == 'ELSE':
+                            col_ia_index_ref += 1
+                            if ia_data['param'][0] == 0:
+                                last_was_else0 = True
+                            else:
+                                last_was_else0 = False
                         else:
                             last_was_else0 = False
+                        if ia_data['text'] == 'END':
+                            last_was_end = True
+                        else:
+                            last_was_end = False
+                        #if ia_data['text'] == 'ENDIF':
+                        #    col_ia_index_ref -= 1
                     else:
-                        last_was_else0 = False
-                    if ia_data['text'] == 'END':
-                        last_was_end = True
-                    else:
+                        worksheet.write(row_index['ia_data'], col_ia_index, 'Command ID', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['id'], self.border_center_style)
+                        worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Command text', self.column_title_style)
+                        worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['text'], self.border_center_bold_style)
+                        col_ia_index += 2
+                        for index, param in enumerate(ia_data['param']):
+                            worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
+                            worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
+                            col_ia_index += 1
                         last_was_end = False
-                    #if ia_data['text'] == 'ENDIF':
-                    #    col_ia_index_ref -= 1
-                else:
-                    worksheet.write(row_index['ia_data'], col_ia_index, 'Command ID', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index, ia_data['id'], self.border_center_style)
-                    worksheet.write(row_index['ia_data'], col_ia_index + 1, 'Command text', self.column_title_style)
-                    worksheet.write(row_index['ia_data'] + 1, col_ia_index + 1, ia_data['text'], self.border_center_bold_style)
-                    col_ia_index += 2
-                    for index, param in enumerate(ia_data['param']):
-                        worksheet.write(row_index['ia_data'], col_ia_index, 'Command param{}'.format(index), self.column_title_style)
-                        worksheet.write(row_index['ia_data'] + 1, col_ia_index, param, self.border_center_style)
-                        col_ia_index += 1
-                    last_was_end = False
-                    last_was_else0 = False
-                row_index['ia_data'] += 2
-            row_index['ia_data'] += 2  # Adding space between IA zone
+                        last_was_else0 = False
+                    row_index['ia_data'] += 2
+                row_index['ia_data'] += 2  # Adding space between IA zone
         # Post validation
         self.__validation_post_process_all(worksheet, game_data)
 
