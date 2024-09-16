@@ -59,12 +59,15 @@ jobs:
           rm -rf ifrit-xlsx/release
           cd release/ifrit-enhanced
       - name: zip name continuous
+        shell: bash
         if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
         run: 7z  a -tzip ../ifrit-enhanced-continuous.zip .
       - name: zip name tag
+        shell: bash
         if: github.event.ref_type == 'tag'
         run: 7z  a -tzip ../ifrit-enhanced${{  github.ref_name }}.zip .  
       - name: Test
+        shell: bash
         run: |
           ls -al ${{ github.workspace }}
           ls -al ${{ github.workspace }}/release
