@@ -125,6 +125,7 @@ class CommandWidget(QWidget):
                 print("Id not found: {}".format(self.command.get_id()))
             self.op_id_widget.view().setMinimumWidth(self.__get_largest_size_from_combobox(self.op_id_widget) + 40)
             self.op_id_widget.currentIndexChanged.connect(self.__op_id_change)
+            self.op_id_widget.wheelEvent = lambda event: None
         else:
             self.op_id_widget = QSpinBox()
             self.op_id_widget.setFixedSize(50, 30)
@@ -158,6 +159,7 @@ class CommandWidget(QWidget):
                 self.widget_op_code[i].view().setMinimumWidth(self.__get_largest_size_from_combobox(self.widget_op_code[i]) + 40)
                 self.widget_op_code[i].setFixedSize(80, 30)
                 self.widget_op_code[i].currentIndexChanged.connect(self.__op_code_change)
+                self.widget_op_code[i].wheelEvent = lambda event: None
             else:
                 self.widget_op_code.insert(i, QSpinBox())
                 self.widget_op_code[i].setFixedSize(50, 30)
