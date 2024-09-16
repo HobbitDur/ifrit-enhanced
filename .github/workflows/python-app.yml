@@ -73,7 +73,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "ifrit-enhanced-${{ github.sha[0:7] }}.zip"
+          name: "ifrit-enhanced-${{ github.sha }}.zip"
           path: ${{ github.workspace }}/release
   release_assets:
     name: Release
