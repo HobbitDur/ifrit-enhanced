@@ -68,9 +68,9 @@ class Ennemy():
                     property_elem = [x for ind, x in enumerate(
                         game_data.SECTION_INFO_STAT_LIST_DATA + game_data.SECTION_BATTLE_SCRIPT_LIST_DATA + game_data.SECTION_MODEL_ANIM_LIST_DATA) if
                                      x['name'] == param_name][0]
-                if param_name in (game_data.stat_values + ['card', 'devour']):  # List
+                if param_name in (game_data.stat_values + ['card', 'devour']):  # List of 1 byte value
                     value_to_set = bytes(value)
-                elif param_name in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap', 'nb_animation']:
+                elif param_name in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap', 'nb_animation'] + game_data.BYTE_FLAG_LIST:
                     value_to_set = value.to_bytes(length=property_elem['size'], byteorder=property_elem['byteorder'])
                 elif param_name in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop',
                                     'med_lvl_drop',
@@ -112,6 +112,10 @@ class Ennemy():
                     # Completing the 0 after the name
                     for i in range(len(value_to_set), property_elem['size']):
                         value_to_set.append(0)
+                elif param_name in ['renzokuken']:
+                    value_to_set = bytearray()
+                    for i in range(len(value)):
+                        value_to_set.extend(value[i].to_bytes(2, game_data.SECTION_INFO_STAT_RENZOKUKEN['byteorder']))
                 else:  # Data that we don't modify in the excel
                     continue
                 if value_to_set:
@@ -161,8 +165,8 @@ class Ennemy():
                 value = game_data.translate_hex_to_str(raw_data_selected)
             elif el['name'] in (game_data.stat_values + ['card', 'devour']):
                 value = list(raw_data_selected)
-            elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
-                value = int.from_bytes(raw_data_selected)
+            elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap', ]:
+                value = int.from_bytes(raw_data_selected, byteorder=el['byteorder'])
             elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop',
                                 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
                 list_data = list(raw_data_selected)
@@ -175,7 +179,7 @@ class Ennemy():
                 value = list(raw_data_selected)
                 for i in range(data_size):
                     value[i] = 900 - value[i] * 10  # Give percentage
-            elif el['name'] in ['abilities_low', 'abilities_med', 'abilities_high']:
+            elif el['name'] in game_data.ABILITIES_HIGHNESS_ORDER:
                 list_data = list(raw_data_selected)
                 value = []
                 for i in range(0, data_size - 1, 4):
@@ -184,10 +188,45 @@ class Ennemy():
                 value = list(raw_data_selected)
                 for i in range(data_size):
                     value[i] = value[i] - 100  # Give percentage, 155 means immune.
+            elif el['name'] in game_data.BYTE_FLAG_LIST:  # Flag in byte management
+                byte_value = format((int.from_bytes(raw_data_selected)), '08b')[::-1] # Reversing
+                value = {}
+                if el['name'] == 'byte_flag_0':
+                    byte_list = game_data.SECTION_INFO_STAT_BYTE_FLAG_0_LIST_VALUE
+                elif el['name'] == 'byte_flag_1':
+                    byte_list = game_data.SECTION_INFO_STAT_BYTE_FLAG_1_LIST_VALUE
+                elif el['name'] == 'byte_flag_2':
+                    byte_list = game_data.SECTION_INFO_STAT_BYTE_FLAG_2_LIST_VALUE
+                elif el['name'] == 'byte_flag_3':
+                    byte_list = game_data.SECTION_INFO_STAT_BYTE_FLAG_3_LIST_VALUE
+                else:
+                    print("Unexpected byte flag {}".format(el['name']))
+                    byte_list = game_data.SECTION_INFO_STAT_BYTE_FLAG_1_LIST_VALUE
+                for index, bit_name in enumerate(byte_list):
+                    value[bit_name] = +bool(int(byte_value[index]))
+                    # For test purpose
+                    if value[bit_name] == 1 and self.info_stat_data['monster_name'] != '\\n{NewPage}\\n{x0c00}/${x1000}{x0900}{x0c02}':
+                        if bit_name not in game_data.game_info_test.keys():
+                            game_data.game_info_test[bit_name] = []
+                            self.info_stat_data[el['name']] = []
+                        game_data.game_info_test[bit_name].append(self.info_stat_data['monster_name'])
+                    # End test purpose
+            elif el['name'] in 'renzokuken':
+                value = []
+                for i in range(0,el['size'], 2): #List of 8 value of 2 bytes
+                    value.append(int.from_bytes(raw_data_selected[i:i+2], el['byteorder']))
             else:
                 value = "ERROR UNEXPECTED VALUE"
+                print("Unexpected name while analyzing info stat: {}".format(el['name']))
 
             self.info_stat_data[el['name']] = value
+
+            # For test purpose
+            if 'list_monster' not in game_data.game_info_test.keys():
+                game_data.game_info_test['list_monster'] = []
+            if self.info_stat_data['monster_name'] not in game_data.game_info_test['list_monster']:
+                if '\\n{NewPage}\\n{x0c00}/${x1000}{x0900}{x0c02}' not in self.info_stat_data['monster_name']:
+                    game_data.game_info_test['list_monster'].append(self.info_stat_data['monster_name'])
 
     def __analyze_battle_script_section(self, game_data):
         SECTION_NUMBER = 8

@@ -3,6 +3,6 @@ Ice
 Thunder
 Earth
 Bio
-Water
 Wind
+Water
 Holy
