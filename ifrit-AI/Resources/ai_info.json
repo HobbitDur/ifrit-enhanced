@@ -121,5 +121,13 @@
     {"param_id": 206, "text": "ALLY OR {} RANDOMLY", "param_type": "monster_name", "comment":  "Arconada"},
     {"param_id": 207, "text": "RANDOM ENNEMY", "param_type": "", "comment":  "Marsupial with meteor"},
     {"param_id": 208, "text": "NEW ALLY", "param_type": "", "comment":  "Shiva"}
+  ],
+    "aptitude_list": [
+    {"aptitude_id": 0, "text": "Strength"},
+    {"aptitude_id": 1, "text": "Vitality"},
+    {"aptitude_id": 2, "text": "Magic" },
+    {"aptitude_id": 3, "text": "Spirit" },
+    {"aptitude_id": 4, "text": "Speed"},
+    {"aptitude_id": 5, "text": "Evade"}
   ]
 }

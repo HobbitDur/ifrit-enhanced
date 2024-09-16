@@ -88,30 +88,41 @@ class Command():
                 elif type == "special_action":
                     if self.__op_code[op_index] < len(self.game_data.special_action):
                         param_value.append(self.game_data.special_action[self.__op_code[op_index]]['name'])
+                        self.param_possible_list.append([{'id': id, 'data': val_dict['name']} for id, val_dict in
+                                                         self.game_data.special_action.items()])
                     else:
                         param_value.append("UNKNOWN SPECIAL_ACTION")
                 elif type == "card":
                     if self.__op_code[op_index] < len(self.game_data.card_values):
                         param_value.append(self.game_data.card_values[self.__op_code[op_index]]['name'])
+                        self.param_possible_list.append([{'id': id, 'data': val_dict['name']} for id, val_dict in
+                                                         self.game_data.card_values.items()])
                     else:
                         param_value.append("UNKNOWN CARD")
                 elif type == "monster":
                     if self.__op_code[op_index] < len(self.game_data.monster_values):
                         param_value.append(self.game_data.monster_values[self.__op_code[op_index]])
+                        self.param_possible_list.append([{'id': i, 'data': self.game_data.monster_values[i]} for i in
+                                                         range(len(self.game_data.monster_values))])
                     else:
                         param_value.append("UNKNOWN MONSTER")
                 elif type == "item":
                     if self.__op_code[op_index] < len(self.game_data.item_values):
                         param_value.append(self.game_data.item_values[self.__op_code[op_index]]['name'])
+                        self.param_possible_list.append([{'id': id, 'data': val_dict['name']} for id, val_dict in
+                                                         self.game_data.item_values.items()])
                     else:
                         param_value.append("UNKNOWN ITEM")
                 elif type == "gforce":
                     if self.__op_code[op_index] < len(self.game_data.gforce_values):
                         param_value.append(self.game_data.gforce_values[self.__op_code[op_index]])
+                        self.param_possible_list.append([{'id': i, 'data': self.game_data.gforce_values[i]} for i in
+                                                         range(len(self.game_data.gforce_values))])
                     else:
                         param_value.append("UNKNOWN GFORCE")
                 elif type == "target":
                     param_value.append(self.__get_target(self.__op_code[op_index]))
+                    self.param_possible_list.append([x for x in self.__get_target_list()])
                 else:
                     print("Unknown type, considering a int")
                     param_value.append(self.__op_code[op_index])
@@ -119,60 +130,61 @@ class Command():
                 param_value[i] = '<span style="color:' + self.__color_param + ';">' + param_value[i] + '</span>'
             self.__text = (op_info['text'] + " (size:{}bytes)").format(*param_value, op_info['size'] + 1)
         elif op_info["complexity"] == "complex":
-            call_function = getattr(self, "_Command__op_" + "{:02X}".format(op_info["op_code"]) + "_analysis")
+            call_function = getattr(self, "_Command__op_" + "{:02}".format(op_info["op_code"]) + "_analysis")
             call_result = call_function(self.__op_code)
             self.__text = call_result[0].format(
                 *['<span style="color:' + self.__color_param + ';">' + str(x) + '</span>' for x in call_result[1]])
             self.__text += " (size:{}bytes)".format(op_info['size'] + 1)
 
-    def __op_17_analysis(self, op_code):
+    def __op_23_analysis(self, op_code):
         if op_code[0] > 0:
             ret = "DEACTIVATE RUN"
         else:
             ret = "ACTIVATE RUN"
+        self.param_possible_list.append([{'id': 1, 'data': "DEACTIVATE RUN"}, {'id': 0, 'data': "ACTIVATE RUN"}])
         return [ret, []]
 
-    def __op_26_analysis(self, op_code):
+    def __op_38_analysis(self, op_code):
         if op_code[3] < len(self.game_data.status_ia_values):
             status = self.game_data.status_ia_values[op_code[3]]['name']
         else:
             status = "UNKNOWN STATUS"
-        if op_code[0] + op_code[2]:
-            info = ''
-        else:
-            info = " unknown {}|{}".format(op_code[0], op_code[2])
+
+        info = ", unknown {}|{}".format(op_code[0], op_code[2])
+        self.param_possible_list.append([])
+        self.param_possible_list.append(self.__get_target_list())
+        self.param_possible_list.append([])
+        param_possible = []
+        for index, el in self.game_data.status_ia_values.items():
+            param_possible.append({'id': index, 'data': el['name']})
+        self.param_possible_list.append(param_possible)
         ret = "TARGET {} WITH STATUS {}{}"
         return [ret, [self.__get_target(op_code[1]), status, info]]
 
-    def __op_18_analysis(self, op_code):
+    def __op_24_analysis(self, op_code):
         ret = self.__op_01_analysis(op_code)
-        if op_code[0] != 0:
-            ret[0] += 'debug: {}'
+        ret[0] += ' + unknown action'
         return [ret[0], ret[1]]
 
-    def __op_28_analysis(self, op_code):
-        if op_code[0] == 0:
-            aptitude = 'Strength'
-        elif op_code[0] == 1:
-            aptitude = 'Vitality'
-        elif op_code[0] == 2:
-            aptitude = 'Magic'
-        elif op_code[0] == 3:
-            aptitude = 'Spirit'
-        elif op_code[0] == 4:
-            aptitude = 'Speed'
-        elif op_code[0] == 5:
-            aptitude = 'Evade'
+    def __op_40_analysis(self, op_code):
+        aptitude_info = [x for x in self.game_data.ai_data_json['aptitude_list'] if x['aptitude_id'] == op_code[0]]
+        print(aptitude_info)
+        if aptitude_info:
+            aptitude_text = aptitude_info[0]['text']
         else:
-            aptitude = "Unknown aptitude"
-
+            aptitude_text = "Unknown aptitude"
+        self.param_possible_list.append([{"id": x["aptitude_id"], "data" :x['text']} for x in self.game_data.ai_data_json['aptitude_list']])
+        self.param_possible_list.append([])
         if op_code[1] == 10:
-            return ["REINIT {} TO BASE VALUE", [aptitude]]
+            return ["REINIT {} TO BASE VALUE", [aptitude_text, op_code[1] / 10]]
         else:
-            return ["MULTIPLY {} BY {}", [aptitude, op_code[1] / 10]]
 
-    def __op_23_analysis(self, op_code):
+            return ["MULTIPLY {} BY {}", [aptitude_text, op_code[1] / 10]]
+
+    def __op_35_analysis(self, op_code):
         jump = int.from_bytes(bytearray([op_code[0], op_code[1]]), byteorder='little')
+        self.param_possible_list.append([])
+        self.param_possible_list.append([])
         if jump == 0:
             return ['ENDIF', []]
         elif jump == 3:
@@ -180,7 +192,7 @@ class Command():
         else:
             return ['ELSE jump {} bytes forward', [jump]]
 
-    def __op_2D_analysis(self, op_code):
+    def __op_45_analysis(self, op_code):
         # op_2D = ['element', 'elementval', '?']
         if op_code[0] < len(self.game_data.magic_type_values):
             element = self.game_data.magic_type_values[op_code[0]]
@@ -188,11 +200,17 @@ class Command():
             element = "UNKNOWN ELEMENT TYPE"
         element_val = op_code[1]
         op_code_unknown = op_code[2]
-        return ['Resist element {} at {}', [element, element_val]]
+        param_possible = []
+        for i in range(len(self.game_data.magic_type_values)):
+            param_possible.append({'id':i, 'data': self.game_data.magic_type_values[i]})
+        self.param_possible_list.append(param_possible)
+        self.param_possible_list.append([])
+        self.param_possible_list.append([])
+        return ['Resist element {} at {}, unknown value (impact on resist element): {}', [element, element_val, op_code_unknown]]
 
-    def __op_1A_analysis(self, op_code):
+    def __op_26_analysis(self, op_code):
         analysis = self.__op_01_analysis(op_code)
-        analysis[0] += 'LOCK BATTLE'
+        analysis[0] += ' AND LOCK BATTLE'
         return analysis
 
     def __op_01_analysis(self, op_code):
@@ -202,6 +220,10 @@ class Command():
         else:
             ret = "/!\\SHOW BATTLE BUT NO BATTLE TO SHOW"
             param_return = []
+        possible_param = []
+        for i in range (len(self.__battle_text)):
+            possible_param.append({'id': i, 'data': self.__battle_text[i]})
+        self.param_possible_list.append(possible_param)
         return [ret, param_return]
 
     def __op_02_analysis(self, op_code):
@@ -368,7 +390,7 @@ class Command():
             return ["IF {} {} {} (Subject ID:{}) | ELSE jump {} bytes forward",
                     [left_subject_text, comparator, right_subject_text, subject_id, jump_value]]
 
-    def __op_27_analysis(self, op_code):
+    def __op_39_analysis(self, op_code):
         if op_code[0] == 23:
             ret = 'auto-boomerang'
         else:

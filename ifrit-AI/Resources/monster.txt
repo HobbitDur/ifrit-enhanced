@@ -136,9 +136,9 @@ Wedge
 Biggs
 Fujin
 Raijin
-UFO?
-UFO?
-UFO?
-UFO?
+UFO1
+UFO2
+UFO3
+UFO4
 Gunblade
 Base Soldier
