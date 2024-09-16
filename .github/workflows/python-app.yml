@@ -14,31 +14,21 @@ permissions:
   contents: read
 
 jobs:
-  install_python_dependencies:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r ifrit-AI/requirements.txt
-        pip install pyinstaller
-        pip freeze
-        python --version
-    - name: Lint with Ruff
-      run: |
-        pip install ruff
-        ruff check --output-format=github .
-      continue-on-error: true  
   create_assets:
       runs-on: windows-latest
-      needs:
-      - install_python_dependencies
       steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ifrit-AI/requirements.txt
+          pip install pyinstaller
+          pip freeze
+          python --version
       - uses: actions/checkout@v4
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -90,7 +80,6 @@ jobs:
           path: ${{ github.workspace }}/release
   test:
     needs:
-    - install_python_dependencies
     - create_assets
     runs-on: windows-latest
     steps:
@@ -100,7 +89,6 @@ jobs:
   release_assets:
     name: Release
     needs:
-    - install_python_dependencies
     - create_assets
     runs-on: windows-latest
     concurrency: release-${{ github.ref }}
