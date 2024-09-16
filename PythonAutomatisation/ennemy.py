@@ -1,6 +1,11 @@
+import glob
 import os
+import shutil
+from math import floor
 
 from simple_file_checksum import get_checksum
+
+
 class Ennemy():
 
     def __init__(self):
@@ -48,7 +53,7 @@ class Ennemy():
 
         return file[hex]
 
-    def get_stat(self, game_data):
+    def analyse_loaded_data(self, game_data):
         """This is the main function. Here we have several cases.
         So first the based stat. As there is 4 stats for each in order to compute the final stat, they are stored in a list of size 4.
         For card, this is the ID for the different case: DROP, MOD, RARE_MOD
@@ -59,29 +64,29 @@ class Ennemy():
         Abilities TODO
         """
         for el in game_data.LIST_DATA:
-            pointer_data_start = self.file_raw_data[self.pointer_data_start + el['offset']:  self.pointer_data_start + el['offset'] + el['size']]
-            if el['name'] in ['hp', 'str', 'vit', 'mag', 'spr', 'spd', 'eva', 'card', 'devour', 'abilities']:
-                value = list(pointer_data_start)
+            raw_data_selected = self.file_raw_data[self.pointer_data_start + el['offset']:  self.pointer_data_start + el['offset'] + el['size']]
+            if el['name'] in (game_data.stat_values + ['card', 'devour', 'abilities']):
+                value = list(raw_data_selected)
 
             elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
-                value = int.from_bytes(pointer_data_start)
+                value = int.from_bytes(raw_data_selected)
 
             elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
-                list_data = list(pointer_data_start)
+                list_data = list(raw_data_selected)
                 value = []
                 for i in range(0, el['size'] - 1, 2):
                     value.append({'ID': list_data[i], 'value': list_data[i + 1]})
 
             elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
-                value = int.from_bytes(pointer_data_start) * 100 / 256
+                value = int.from_bytes(raw_data_selected) * 100 / 256
 
             elif el['name'] in ['elem_def']:  # Case with elem
-                value = list(pointer_data_start)
+                value = list(raw_data_selected)
                 for i in range(el['size']):
                     value[i] = 900 - value[i] * 10  # Give percentage
 
             elif el['name'] in ['status_def']:  # Case with elem
-                value = list(pointer_data_start)
+                value = list(raw_data_selected)
                 for i in range(el['size']):
                     value[i] = value[i] - 100  # Give percentage, 155 means immune.
 
@@ -89,3 +94,48 @@ class Ennemy():
                 value = "ERROR UNEXPECTED VALUE"
 
             self.data.append({'name': el['name'], 'value': value, 'pretty_name': el['pretty_name']})
+
+    def write_data_to_file(self, game_data, origin_path, dest_path):
+        # First copy original file
+        for f in glob.glob(os.path.join(dest_path, self.origin_file_name)):
+            os.remove(f)
+        full_origin_path = os.path.join(origin_path, self.origin_file_name)
+        full_dest_path = os.path.join(dest_path, self.origin_file_name)
+        shutil.copy(full_origin_path, full_dest_path)
+
+        # Then load file (python make it difficult to directly modify files)
+        self.load_file_data(full_dest_path, game_data)
+
+        for el in self.data:
+            property_elem = [x for ind, x in enumerate(game_data.LIST_DATA) if x['name'] == el['name']][0]
+            if el['name'] in (game_data.stat_values + ['card', 'devour', 'abilities']):  # List
+                value_to_set = bytes(el['value'])
+            elif el['name'] in ['med_lvl', 'high_lvl', 'extra_xp', 'xp', 'ap']:
+                value_to_set = el['value'].to_bytes()
+            elif el['name'] in ['low_lvl_mag', 'med_lvl_mag', 'high_lvl_mag', 'low_lvl_mug', 'med_lvl_mug', 'high_lvl_mug', 'low_lvl_drop', 'med_lvl_drop', 'high_lvl_drop']:  # Case with 4 values linked to 4 IDs
+                value_to_set=[]
+                for el2 in el['value']:
+                    value_to_set.append(el2['ID'])
+                    value_to_set.append(el2['value'])
+                value_to_set = bytes(value_to_set)
+            elif el['name'] in ['mug_rate', 'drop_rate']:  # Case with %
+                value_to_set = floor(el['value'] *256/100).to_bytes()
+            elif el['name'] in ['elem_def']:  # Case with elem
+                value_to_set = []
+                for i in range(len(el['value'])):
+                    value_to_set.append(floor((900 - el['value'][i])/ 10))
+                value_to_set = bytes(value_to_set)
+            elif el['name'] in ['status_def']:  # Case with elem
+                value_to_set = []
+                for i in range(len(el['value'])):
+                    value_to_set.append(el['value'][i]+100)
+                value_to_set = bytes(value_to_set)
+
+            if value_to_set:
+                self.file_raw_data[self.pointer_data_start + property_elem['offset']:
+                                   self.pointer_data_start + property_elem['offset'] + property_elem['size']] = value_to_set
+            value_to_set = None
+
+        # Write back on file
+        with open(full_dest_path, "wb") as f:
+            f.write(self.file_raw_data)

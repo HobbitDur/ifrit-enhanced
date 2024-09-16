@@ -1,6 +1,7 @@
 import glob
 import os
 from math import floor
+import re
 
 import xlsxwriter
 from openpyxl.reader.excel import load_workbook
@@ -8,7 +9,12 @@ from openpyxl.reader.excel import load_workbook
 from ennemy import Ennemy
 from gamedata import GameData
 
+########################################################################
+# Const
+########################################################################
+
 FILE_MONSTER = glob.glob("OriginalFiles/*.dat")
+FILE_XLSX = "OutputFiles/ifrit.xlsx"
 
 COL_STAT = 0
 COL_DEF = 6
@@ -23,13 +29,25 @@ COL_SHIT_LOW_LVL = 1
 COL_SHIT_MED_LVL = 3
 COL_SHIT_HIGH_LVL = 5
 
+########################################################################
+# Useful
+########################################################################
+
+def create_checksum_file(ennemy_list, file_name):
+    with open("OutputFiles/" + file_name, "w") as f:
+        for key, ennemy in ennemy_list.items():
+            f.write("File name: {} | Checksum: {}\n".format(ennemy.origin_file_name, ennemy.origin_file_checksum))
+
+########################################################################
+# Export from dat to XLSX
+########################################################################
 def export_to_xlsx(ennemy_list, game_data: Ennemy()):
     workbook = xlsxwriter.Workbook("OutputFiles/ifrit.xlsx")
 
     tab_list = []
     for key, ennemy in ennemy_list.items():
         # Tab (sheet) creation. Checking name doesn't already exist
-        file_name = ennemy.name
+        file_name = str(int(re.search(r'\d{3}', ennemy.origin_file_name).group())) + " - " + ennemy.name
         if file_name == '':
             file_name = "Empty"
         while file_name in tab_list:
@@ -82,7 +100,7 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
 
         # Filling the Excel
         for el in ennemy.data:
-            try:  # Necessary for garbage data
+            try:
                 # Stat menu
                 column_index['stat'] = 0
 
@@ -155,19 +173,11 @@ def export_to_xlsx(ennemy_list, game_data: Ennemy()):
                     row_index['misc'] += 1
 
             except IndexError:
-                if key == "c0m123.dat": # Due to garbage data, there is a magic ID 233 in c0m123
-                    print("Known error on com123 due to magic ID 233")
-                elif key == "c0m127.dat": # Due to garbage data, there is a magic ID 233 in c0m123
-                    print("Known error on com127 due to magic ID 255")
-                else:
-                    raise IndexError("Unknown error on file {} for monster name {}".format(key, ennemy.name))
+                raise IndexError("Unknown error on file {} for monster name {}".format(key, ennemy.name))
         worksheet.autofit()
     workbook.close()
 
-def create_checksum_file(ennemy_list):
-    with open("OutputFiles/checksum_origin_file.txt", "w") as f:
-        for key, ennemy in ennemy_list.items():
-            f.write("File name: {} | Checksum: {}\n".format(ennemy.origin_file_name, ennemy.origin_file_checksum))
+
 def dat_to_xlsx(file_list):
     monster = {}
 
@@ -181,31 +191,40 @@ def dat_to_xlsx(file_list):
     game_data.load_magic_type_data("Ressources/magic_type.txt")
     game_data.load_stat_data("Ressources/stat.txt")
 
+
     print("Reading ennemy files")
     for file in file_list:
         file_name = os.path.basename(file)
         monster[file_name] = Ennemy()
         monster[file_name].load_file_data(file, game_data)
         monster[file_name].load_name(game_data)
-        monster[file_name].get_stat(game_data)
+
+    print("Analysing ennemy files")
+    for file in file_list:
+        file_name = os.path.basename(file)
+        monster[file_name].analyse_loaded_data(game_data)
 
     print("Creating checksum file")
-    create_checksum_file(monster)
+    create_checksum_file(monster, "checksum_origin_file.txt")
 
     print("Writing to xlsx file")
     export_to_xlsx(monster, game_data)
 
 
-
+########################################################################
+# Import from XLSX to dat
+########################################################################
 def import_from_xlsx(file, ennemy, game_data):
     """
     As the module to write is different from the reading one, the one writing start at 0 for column and row, when this one, the reading, start at 1
     """
     wb = load_workbook(file)
     for sheet in wb:
-        ennemy[sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value] = Ennemy()
-        current_ennemy = ennemy[sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value]
+        ennemy_origin_file = sheet.cell(ROW_FILE_DATA+1+1, COL_FILE_DATA+1+1).value
+        ennemy[ennemy_origin_file] = Ennemy()
+        current_ennemy = ennemy[ennemy_origin_file]
         current_ennemy.name = sheet.title
+        ennemy[ennemy_origin_file].origin_file_name = ennemy_origin_file
 
         # Stat reading
         row_index = 2
@@ -235,7 +254,7 @@ def import_from_xlsx(file, ennemy, game_data):
         list_value = []
         for el in item:
             for sub in sub_item:
-                name = sub + el
+                name = sub + "_" + el
                 for i in range(4):
                     str_data = sheet.cell(row_index + i, col_index).value
                     if el == 'mag':
@@ -243,8 +262,9 @@ def import_from_xlsx(file, ennemy, game_data):
                     elif el == 'mug' or el == 'drop':
                         id_value = [ind for ind, x in enumerate(game_data.item_values) if x == str_data][0]
                     value = sheet.cell(row_index + i, col_index + 1).value
-                    list_value.append({'ID': id_value, 'value': value})  # Value 1 is not used (all mag have value 1)
+                    list_value.append({'ID': id_value, 'value': value})
                 current_ennemy.data.append({'name': name, 'value': list_value})
+                list_value = []
 
                 col_index += 2
             row_index += 4
@@ -253,15 +273,22 @@ def import_from_xlsx(file, ennemy, game_data):
         #Misc reading
         row_index = 2
         for misc in game_data.MISC_ORDER:
+            value = sheet.cell(row_index, COL_MISC+1+1).value
+            if misc == "mug_rate" or misc == "drop_rate":
+                value = value * 100
+            current_ennemy.data.append({'name': misc, 'value': value})
             row_index += 1
-            current_ennemy.data.append({'name': misc, 'value': sheet.cell(row_index, COL_DEF+1+1).value})
-    print(current_ennemy.data)
 
 
-def write_to_dat():
+def write_to_dat(ennemy_list, game_data:GameData, origin_path:str, dest_path:str):
+    for key, ennemy in ennemy_list.items():
+        ennemy.write_data_to_file(game_data, origin_path, dest_path)
+
 
 def xlsx_to_dat(xlsx_file):
     ennemy = {}
+
+    print("Getting game data")
     game_data = GameData()
     game_data.load_card_data("Ressources/card.txt")
     game_data.load_devour_data("Ressources/devour.txt")
@@ -271,12 +298,17 @@ def xlsx_to_dat(xlsx_file):
     game_data.load_magic_type_data("Ressources/magic_type.txt")
     game_data.load_stat_data("Ressources/stat.txt")
 
+    print("Importing data from xlsx")
     import_from_xlsx(xlsx_file, ennemy, game_data)
-    print(ennemy)
-    write_to_dat()
+
+    print("Writing data to dat files")
+    write_to_dat(ennemy, game_data, "OriginalFiles/", "OutputFiles/")
+
+    print("Creating checksum file")
+    create_checksum_file(ennemy, "checksum_output_file.txt")
 
 
 if __name__ == "__main__":
     dat_to_xlsx(FILE_MONSTER)
-    #xlsx_to_dat("OutputFiles/ifrit.xlsx")
+    xlsx_to_dat(FILE_XLSX)
 
