@@ -33,7 +33,6 @@ class WindowLauncher(QWidget):
 
         self.no_pack_option = QCheckBox("Don't pack when xlsx_to_dat")
         self.launch_option.currentTextChanged.connect(self.launch_option_changed)
-        self.no_pack_option.show()
 
         self.open_xlsx = QCheckBox("Open xlsx when finish")
 
@@ -95,17 +94,14 @@ class WindowLauncher(QWidget):
 
     def launch_option_changed(self):
         if str(self.launch_option.currentText()) == 'fs_to_xlsx':
-            self.no_pack_option.hide()
             self.delete.hide()
             self.copy_option.hide()
             self.copy_option_label.hide()
         elif str(self.launch_option.currentText()) == 'xlsx_to_fs':
-            self.no_pack_option.show()
             self.delete.show()
             self.copy_option.show()
             self.copy_option_label.show()
         else:
-            self.no_pack_option.show()
             self.delete.show()
             self.copy_option.show()
             self.copy_option_label.show()
