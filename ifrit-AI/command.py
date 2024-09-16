@@ -332,7 +332,7 @@ class Command():
 
         if id < len(game_data.ai_data_json['list_target_char']):
             return game_data.ai_data_json['list_target_char'][id]
-        elif id >= 0xC8 and id < 0xC8 + len(list_target_other):
+        elif 0xC8 <= id < 0xC8 + len(list_target_other):
             return list_target_other[id - 0xC8]
         elif id >= 16:
             if id - 16 < len(game_data.monster_values):

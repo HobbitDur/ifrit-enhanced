@@ -34,7 +34,6 @@ class IfritAI(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
         self.ifrit_manager = IfritManager()
-        self.file_path = ""
         # Main window
         self.setWindowTitle("IfritAI")
         self.setMinimumSize(1280, 720)
@@ -95,7 +94,7 @@ class IfritAI(QWidget):
         self.show()
 
     def __save_file(self):
-        print("Save file")
+        self.ifrit_manager.save_file(self.file_loaded)
 
     def __section_change(self):
         self.__clear_lines()

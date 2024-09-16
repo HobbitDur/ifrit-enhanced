@@ -71,17 +71,26 @@ class Ennemy():
 
     def write_data_to_file(self, game_data, path, write_ia=True):
         print("Writing monster {}".format(self.info_stat_data["monster_name"]))
-        # First copy original file
-        full_dest_path = os.path.join(path, self.origin_file_name)
-        # Then load file (python make it difficult to directly modify files)
-        # Then modify loaded file
-        section_position = 8
+        raw_data_to_write = bytearray()
+
+
+        # Write the 8 (0 to 7) first section as raw data
+        sect_pos_ai = 8
+        for i, section_data in enumerate(self.section_raw_data):
+            if i < sect_pos_ai:
+                raw_data_to_write.extend(section_data)
+            else:
+                break
+
+        # Then modify the battel section (text + AI)
         for param_name, value in self.battle_script_data.items():
             if param_name == 'ai_data' and write_ia:
                 # Saving text
-                save_text = self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_offset']:
+
+                raw_data_save_text = self.file_raw_data[self.header_data['section_pos'][8] + self.battle_script_data['offset_text_offset']:
                                                self.header_data['section_pos'][9]]
                 list_offset = ['offset_init_code', 'offset_ennemy_turn', 'offset_counterattack', 'offset_death', 'offset_before_dying_or_hit']
+
                 offset_from_ai_subsection = self.battle_script_data['offset_init_code']
                 offset_from_current_section = 0
                 index_list_offset = 0
@@ -90,53 +99,8 @@ class Ennemy():
                 var_list = game_data.ai_data_json['list_var']
                 target_list = game_data.ai_data_json['list_target_char']
 
-                for command in value:
-                    if command['id'] == -1:  # Separator
-                        index_list_offset += 1
-                        offset_from_ai_subsection += offset_from_current_section
-                        if command['end']:
-                            break
-                        self.battle_script_data[list_offset[index_list_offset]] = offset_from_ai_subsection
-                        offset_from_current_section = 0
-                        continue
-                    command_ref = [x for x in op_code_info_list if x['op_code'] == command['id']][0]
-                    start_data = self.header_data['section_pos'][section_position] + self.battle_script_data[
-                        'offset_ai_sub'] + offset_from_ai_subsection + offset_from_current_section
-                    end_data = start_data + command_ref['size'] + 1  # +1 for taking into account the id we are writing
-                    if command['id'] == 0x02:  # IF
-                        comparator = comparator_list.index(command['comparator'])
-                        jump = command['jump']
-                        value_to_set = [command['id'], command['subject_id'], command['left_param'],
-                                        comparator, command['right_param'], command['debug'], *jump]
-                    elif command['id'] in [0x0E, 0x0F, 0x11, 0x12, 0x13, 0x15]:  # Modify var
-                        if command['param'][-1] == '[global]':
-                            if command['id'] in [0x0E, 0x0F, 0x11]:
-                                futur_command_id = 0x0F
-                            elif command['id'] in [0x12, 0x13, 0x15]:
-                                futur_command_id = 0x13
-                        elif command['param'][-1] == '[savemap]':
-                            if command['id'] in [0x0E, 0x0F, 0x11]:
-                                futur_command_id = 0x11
-                            elif command['id'] in [0x12, 0x13, 0x15]:
-                                futur_command_id = 0x15
-                        else:
-                            if command['id'] in [0x0E, 0x0F, 0x11]:
-                                futur_command_id = 0x0E
-                            elif command['id'] in [0x12, 0x13, 0x15]:
-                                futur_command_id = 0x12
-                        var_ref = [x for x in var_list if x['var_name'] == command['param'][0]]
-                        if var_ref:
-                            var_id = var_ref[0]['op_code']
-                        else:
-                            var_id = int(command['param'][0])
-                        var_set = command['param'][1]
-                        value_to_set = [futur_command_id, var_id, var_set]
-                    elif command['id'] == 0x1A:  # LOCK PARAM TO REMOVE
-                        value_to_set = [command['id'], command['param'][0]]
-                    else:
-                        value_to_set = [command['id'], *command['param']]
-                    offset_from_current_section += command_ref['size'] + 1
-                    self.file_raw_data[start_data:end_data] = bytes(value_to_set)
+"""
+
 
                     # Changing the section 9,10, 11 position and texts offset as we have moved everything a bit
                     # Writing new AI offset
@@ -200,10 +164,11 @@ class Ennemy():
                 if value_to_set:
                     self.file_raw_data[self.header_data['section_pos'][section_position] + property_elem['offset']:
                                        self.header_data['section_pos'][section_position] + property_elem['offset'] + property_elem['size']] = value_to_set
-
+"""
         # Write back on file
-        with open(full_dest_path, "wb") as f:
-            f.write(self.file_raw_data)
+        print("copying")
+        with open(os.path.join("OriginalFiles", "c0m028-write.dat"), "wb") as f:
+            f.write(raw_data_to_write)
 
     def __get_int_value_from_info(self, data_info, section_number=0):
         return int.from_bytes(self.__get_raw_value_from_info(data_info, section_number), data_info['byteorder'])
