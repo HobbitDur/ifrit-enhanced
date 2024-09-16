@@ -27,6 +27,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ifrit-AI/requirements.txt
         pip install pyinstaller
+        ls -al /opt/hostedtoolcache/Python/3.12.5/x64/lib/python3.12/site-packages
         ls -al ifrit-AI
     - name: Lint with Ruff
       run: |
@@ -56,7 +57,7 @@ jobs:
         shell: bash
         run: |
           cd ifrit-AI/
-          python -m Pyinstaller -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
+          /opt/hostedtoolcache/Python/3.12.5/x64/lib/python3.12/site-packages/pyinstaller/pyinstaller.exe -n ifrit-ai -F --specpath release/build --distpath release --workpath release/build --paths venv/Lib/site-packages --onefile --noconsole --icon=../../Resources/icon.ico main.py;
           mkdir -p release/OriginalFiles/;
           cp -r Resources/ release/;
           cp -r OriginalFiles/ release/;
