@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
-name: Python application
+name: Auto-release
 
 on:
   push:
@@ -48,25 +45,27 @@ jobs:
           rm -r release/build
           ls -al
           cd ..
-      - name: Create full release
+      - name: Create full release - start
         shell: bash
         run: |
           ls -al
-          mkdir -p release/ifrit-enhanced${{ github.event.release.tag_name }}
+          mkdir -p release/ifrit-enhanced
           ls -al release
-          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-gui
-          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-ai
-          mkdir -p release/ifrit-enhanced${{ github.event.ref }}/ifrit-xlsx
-          cp -R ifrit-ai/release/* release/ifrit-enhanced${{ github.event.ref }}/ifrit-ai/
-          cp -R ifrit-xlsx/release/* release/ifrit-enhanced${{ github.event.ref }}/ifrit-xlsx/
-          cp -R ifrit-gui/publish/* release/ifrit-enhanced${{ github.event.ref }}/ifrit-gui/
+          mkdir -p release/ifrit-enhanced/ifrit-gui
+          mkdir -p release/ifrit-enhanced/ifrit-ai
+          mkdir -p release/ifrit-enhanced/ifrit-xlsx
+          cp -R ifrit-ai/release/* release/ifrit-enhanced/ifrit-ai/
+          cp -R ifrit-xlsx/release/* release/ifrit-enhanced/ifrit-xlsx/
+          cp -R ifrit-gui/publish/* release/ifrit-enhanced/ifrit-gui/
           rm -rf ifrit-ai/release
           rm -rf ifrit-xlsx/release
-          cd release/ifrit-enhanced${{ github.event.ref }}
-          7z  a -tzip ../ifrit-enhanced${{ github.event.ref }}.zip .
-          cd ..
-          rm -r ifrit-enhanced${{ github.event.ref }}
-          ls -al
+          cd release/ifrit-enhanced
+      - name: zip name continuous
+        if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
+        run: 7z  a -tzip ../ifrit-enhanced-continuous.zip .
+      - name: zip name tag
+        if: github.event.ref_type == 'tag'
+        run: 7z  a -tzip ../ifrit-enhanced${{  github.ref_name }}.zip .
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
