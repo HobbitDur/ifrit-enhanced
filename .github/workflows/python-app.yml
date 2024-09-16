@@ -61,11 +61,15 @@ jobs:
       - name: zip name continuous
         shell: bash
         if: github.event.ref_type != 'tag' && github.ref == 'refs/heads/master'
-        run: 7z  a -tzip ../ifrit-enhanced-continuous.zip .
+        run: |
+          7z  a -tzip "../ifrit-enhanced-continuous.zip" .
+          ls -al .
+          ls -al ../
+          pwd
       - name: zip name tag
         shell: bash
         if: github.event.ref_type == 'tag'
-        run: 7z  a -tzip ../ifrit-enhanced${{  github.ref_name }}.zip .  
+        run: 7z  a -tzip "../ifrit-enhanced${{  github.ref_name }}.zip" .  
       - name: Test
         shell: bash
         run: |
