@@ -51,7 +51,7 @@ jobs:
           rm -r release/build
           ls -al
           cd ..
-      - name: Create full release
+      - name: Create full release first part
         shell: bash
         run: |
           ls -al
@@ -65,7 +65,12 @@ jobs:
           rm -rf ifrit-ai/release
           rm -rf ifrit-xlsx/release
           cd release/ifrit-enhanced-0.x
-          zip a -tzip ../ifrit-enhanced-0.x.zip .
+      - uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a -tzip ../ifrit-enhanced-0.x.zip .
+      - name: Create full release last part
+        shell: bash
+        run: |
           cd ..
           rm -r ifrit-enhanced-0.x
           ls -al
