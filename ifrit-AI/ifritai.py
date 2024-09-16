@@ -1,12 +1,9 @@
+import copy
 import os
-import sys
 
-from PyQt6 import sip
-from PyQt6.QtCore import Qt, QCoreApplication, QThreadPool, QRunnable, QObject, pyqtSignal, pyqtSlot, QThread, QSignalBlocker
-from PyQt6.QtGui import QIcon, QFont, QAction
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QCheckBox, QMessageBox, QProgressDialog, \
-    QMainWindow, QProgressBar, QRadioButton, \
-    QLabel, QFrame, QStyle, QSizePolicy, QButtonGroup, QComboBox, QHBoxLayout, QFileDialog, QToolBar, QSpinBox, QGridLayout, QScrollArea
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QLabel, QFrame, QComboBox, QHBoxLayout, QFileDialog, QSpinBox, QGridLayout, QScrollArea
 
 from ifritmanager import IfritManager
 
@@ -18,12 +15,13 @@ class IfritAI(QWidget):
     def __init__(self, icon_path='Resources'):
 
         QWidget.__init__(self)
+        self.if_column_index = 0
         self.window_layout = QVBoxLayout()
         self.scroll_widget = QWidget()
         self.scroll_area = QScrollArea()
         self.window_layout.addWidget(self.scroll_area)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        #self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        #self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
         self.ifrit_manager = IfritManager()
@@ -70,33 +68,47 @@ class IfritAI(QWidget):
             self.add_line_selector[i].addItems(self.ADD_LINE_SELECTOR_ITEMS)
 
     def __add_line(self, line_index, command):
+        if command.get_id() == 35:
+            self.if_column_index -= 1
         op_id_widget = QSpinBox()
         op_id_widget.setValue(command.get_id())
+        op_id_widget.setMaximumWidth(40)
         frame = QFrame()
         frame.setFrameStyle(0x05)
         frame.setLineWidth(2)
         layout_id = QHBoxLayout()
         layout_id.addWidget(op_id_widget)
         layout_id.addWidget(frame)
-        #self.ai_lines_layout.addWidget(op_id_widget, line_index, 0)
         self.ai_lines_layout.addLayout(layout_id, line_index, 0)
-        row_index = 1
+
+        #self.ai_lines_layout.addWidget(op_id_widget, line_index, 0)
+        column_index =1
         print(len(command.get_op_code()))
         for code in command.get_op_code():
             op_code_widget = QSpinBox()
             op_code_widget.setValue(code)
-            self.ai_lines_layout.addWidget(op_code_widget, line_index, row_index)
-            row_index += 1
+            op_code_widget.setMaximumWidth(40)
+            op_code_widget.setMaximum(255)
+            op_code_widget.setMinimum(0)
+            op_code_widget.valueChanged.connect(lambda: self.__op_code_change(column_index-1))
+            self.ai_lines_layout.addWidget(op_code_widget, line_index, column_index)
+            column_index += 1
 
         frame_text = QFrame()
         frame_text.setFrameStyle(0x05)
         frame_text.setLineWidth(2)
-        row_index = self.MAX_COMMAND_PARAM + 1
+        column_index = self.MAX_COMMAND_PARAM + 1
         text_widget = QLabel(command.get_text())
-        layout_id = QHBoxLayout()
-        layout_id.addWidget(frame_text)
-        layout_id.addWidget(text_widget)
-        self.ai_lines_layout.addLayout(layout_id, line_index, row_index)
+        layout_text = QHBoxLayout()
+        layout_text.addWidget(frame_text)
+        layout_text.addSpacing(20*self.if_column_index)
+        layout_text.addWidget(text_widget)
+        self.ai_lines_layout.addLayout(layout_text, line_index, column_index)
+        if command.get_id() == 2: #IF
+            self.if_column_index+=1
+
+    def __op_code_change(self, index_op_code):
+        print(index_op_code)
 
     def __load_file(self):
         # file_name = self.file_dialog.getOpenFileName(parent=self, caption="Search dat file", filter="*.dat", directory=os.getcwd())[0]

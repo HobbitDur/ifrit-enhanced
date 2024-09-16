@@ -14,9 +14,9 @@
   {"op_code": 99, "var_name": "SetupRandomness99"}
   ],
 "list_target_char": ["Squall", "Zell", "Irvine", "Quistis", "Rinoa", "Selphie", "Seifer", "Edea", "Laguna", "Kiros", "Ward"],
-"list_comparator": ["⩵", "<", ">", "≠", "≤", "≥"],
+"list_comparator": ["==", "<", ">", "≠", "≤", "≥"],
 "op_code_info":[
-    {"op_code": 0, "size": 0, "text": "'STOP", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Stop"},
+    {"op_code": 0, "size": 0, "text": "STOP", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Stop"},
     {"op_code": 1, "size": 1, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "Show battle text"},
     {"op_code": 2, "size": 7, "text": "", "param_index": [0], "complexity": "complex", "param_type":  ["int"], "param_list":  [], "comment":  "IF condition"},
     {"op_code": 3, "size": 0, "text": "UNKNOWN/UNUSED", "param_index": [], "complexity": "simple", "param_type":  [], "param_list":  [], "comment":  "Unknown/unused"},
