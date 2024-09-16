@@ -895,7 +895,7 @@ class Ennemy():
                     attack_type = "Magical damage"
                     self.was_magic = True
                 elif op_code_value == 4:
-                    attack_type = "Object"
+                    attack_type = "Item"
                     self.was_object = True
                 elif op_code_value == 254:
                     attack_type = "G-Force"
