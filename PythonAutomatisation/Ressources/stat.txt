@@ -1,0 +1,7 @@
+hp
+str
+vit
+mag
+spr
+spd
+eva

@@ -241,9 +241,7 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 
-.idea
+**/.idea
 
-*/OutputFiles/*
-*/__pychache__
-
-PythonAutomatisation/OutputFiles/
+**/OutputFiles/*
+**/__pychache__
